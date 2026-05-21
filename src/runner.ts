@@ -17,6 +17,7 @@ export async function runScenario(scenario: Scenario, target: string): Promise<R
       results.push({
         locale,
         status: "fail",
+        failureMode: "no_tool_call",
         detail: targetResult.detail,
       });
       continue;
@@ -27,6 +28,7 @@ export async function runScenario(scenario: Scenario, target: string): Promise<R
     results.push({
       locale,
       status: assertion.pass ? "pass" : "fail",
+      failureMode: assertion.failureMode,
       detail: assertion.detail,
       response: targetResult.response,
     });

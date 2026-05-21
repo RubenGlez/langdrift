@@ -1,0 +1,76 @@
+id: scheduling_reschedule
+agent: generic
+
+# Domain: scheduling
+# Intent: customer can't make their appointment and wants to move it to another time
+# Expected tool: reschedule_appointment
+# Confusion risk: cancel_appointment (can't make it, could be read as wanting to cancel)
+#                 book_new_appointment (needs a new time, could be read as new booking)
+#
+# All inputs express the same intent at the same level of directness.
+# Natural phrasing in each language — not literal translations.
+
+locales:
+  en:
+    input: "Hi, I have an appointment this Friday but something came up and I need to move it to next week."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  fr:
+    input: "Bonjour, j'ai un rendez-vous vendredi mais quelque chose s'est produit et je dois le déplacer à la semaine prochaine."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  ar:
+    input: "مرحباً، لديّ موعد يوم الجمعة لكن طرأ أمر ما وأحتاج إلى تأجيله إلى الأسبوع القادم."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  sw:
+    input: "Habari, nina miadi Ijumaa lakini kitu kimetokea na ninahitaji kuihamisha wiki ijayo."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  cy:
+    input: "Helo, mae gen i apwyntiad ddydd Gwener ond mae rhywbeth wedi codi ac mae angen ei symud i'r wythnos nesaf."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  eu:
+    input: "Kaixo, ostiralerako hitzordua daukat baina zerbait gertatu da eta datorren asterako mugitu behar dut."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  mn:
+    input: "Сайн байна уу, би энэ баасан гарагт цаг авсан боловч ямар нэг зүйл гарч ирсэн тул дараа долоо хоногт шилжүүлэх хэрэгтэй байна."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  yo:
+    input: "Ẹ káàárọ̀, mo ní ìpàdé ní ọjọ́ Jimọ̀ ṣùgbọ́n nǹkan kan ṣẹlẹ̀ àti pé mo nílò láti gbépadà rẹ̀ sí ọ̀sẹ̀ tó ń bọ̀."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment

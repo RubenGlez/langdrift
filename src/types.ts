@@ -28,9 +28,18 @@ export type TargetResponse = {
   structured: unknown;
 };
 
+export type FailureMode =
+  | "no_tool_call"
+  | "wrong_tool"
+  | "wrong_argument"
+  | "missing_argument"
+  | "forbidden_tool"
+  | null;
+
 export type LocaleResult = {
   locale: string;
   status: "pass" | "fail";
+  failureMode: FailureMode;
   detail: string;
   response?: TargetResponse;
 };

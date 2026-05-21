@@ -38,6 +38,7 @@ test("fails when the expected tool call is missing", () => {
 
   assert.deepEqual(result, {
     pass: false,
+    failureMode: "no_tool_call",
     detail: "expected create_refund_ticket, got no tool calls",
   });
 });
@@ -59,6 +60,7 @@ test("fails when an expected tool call argument is missing", () => {
 
   assert.deepEqual(result, {
     pass: false,
+    failureMode: "missing_argument",
     detail: "expected argument reason=duplicate_charge, got missing",
   });
 });
@@ -78,6 +80,7 @@ test("fails when a forbidden tool call appears", () => {
 
   assert.deepEqual(result, {
     pass: false,
+    failureMode: "forbidden_tool",
     detail: "forbidden tool call escalate_to_human was called",
   });
 });
@@ -97,6 +100,7 @@ test("passes when a forbidden tool call is absent", () => {
 
   assert.deepEqual(result, {
     pass: true,
+    failureMode: null,
     detail: "create_refund_ticket",
   });
 });
@@ -118,6 +122,7 @@ test("fails when an expected tool call argument has the wrong value", () => {
 
   assert.deepEqual(result, {
     pass: false,
+    failureMode: "wrong_argument",
     detail: "expected argument reason=duplicate_charge, got other",
   });
 });
@@ -144,6 +149,7 @@ test("passes when expected tool call arguments match", () => {
 
   assert.deepEqual(result, {
     pass: true,
+    failureMode: null,
     detail: "create_refund_ticket",
   });
 });
@@ -160,6 +166,7 @@ test("passes when the expected tool call appears", () => {
 
   assert.deepEqual(result, {
     pass: true,
+    failureMode: null,
     detail: "create_refund_ticket",
   });
 });

@@ -7,8 +7,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Run the CLI
 node ./src/cli.ts run <scenario.yaml> --target <url>
-# or via pnpm script
-pnpm langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
 
 # Run tests (Node built-in test runner)
 pnpm test
@@ -16,14 +14,16 @@ pnpm test
 # Run a single test file
 node --test tests/scenario.test.ts
 
-# Start the demo agent (port 3000)
-pnpm example:agent
-
 # Start the DeepSeek-backed agent (requires DEEPSEEK_API_KEY)
 pnpm example:deepseek-agent
 
-# Run the DeepSeek benchmark
+# Run the realistic routing benchmark (shows real cross-locale failures)
+DEEPSEEK_API_KEY=... pnpm benchmark:deepseek-realistic
+
+# Run other benchmarks
 DEEPSEEK_API_KEY=... pnpm benchmark:deepseek
+DEEPSEEK_API_KEY=... pnpm benchmark:deepseek-lowresource
+DEEPSEEK_API_KEY=... pnpm benchmark:deepseek-indirect
 ```
 
 TypeScript is not compiled — Node runs `.ts` files directly (Node >= 24 with native strip-types). There is no build step.
@@ -56,8 +56,7 @@ CLI (cli.ts)
 
 **YAML parser** (`scenario.ts`) is a hand-rolled indent-aware tokenizer with no external dependencies. The project has zero runtime dependencies.
 
-**Examples** (`examples/`) demonstrate two agent implementations:
-- `support-agent/server.ts` — deterministic fake agent; French locale intentionally omits the tool call to show a cross-locale failure
-- `deepseek-support-agent/` — real LLM-backed agent using DeepSeek API
+**Examples** (`examples/`) demonstrate a real LLM-backed agent:
+- `deepseek-support-agent/` — DeepSeek-backed agent with multiple benchmark scenarios
 
 **Scenarios** (`examples/scenarios/*.yaml`) — one scenario per file; each locale gets its own `input` and `expect` block.

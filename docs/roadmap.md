@@ -45,7 +45,7 @@ Run one localized scenario from the terminal against one HTTP target.
 Example:
 
 ```bash
-npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+npm run langdrift -- run ./examples/scenarios/deepseek-realistic-routing.yaml --target http://127.0.0.1:3002/api/agent
 ```
 
 Minimum scenario shape:

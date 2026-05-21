@@ -30,7 +30,7 @@ Run one explicit scenario file against one HTTP target passed through the CLI.
 Example:
 
 ```bash
-npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+npm run langdrift -- run ./examples/scenarios/deepseek-realistic-routing.yaml --target http://127.0.0.1:3002/api/agent
 ```
 
 The direct CLI workflow does not require a config file. A future
@@ -162,7 +162,7 @@ Example:
 LangDrift run
 
 Scenario: refund_request
-Target: http://127.0.0.1:3000/api/agent
+Target: http://127.0.0.1:3002/api/agent
 
 Locale  Status  Detail
 en      pass    create_refund_ticket
@@ -226,8 +226,8 @@ Key files:
 - `src/assertions.ts`
 - `src/runner.ts`
 - `src/reportTerminal.ts`
-- `examples/support-agent/server.ts`
-- `examples/scenarios/refund-request.yaml`
+- `examples/deepseek-support-agent/server-realistic.ts`
+- `examples/scenarios/deepseek-realistic-routing.yaml`
 - `tests/scenario.test.ts`
 
 Avoid a monorepo, database, web framework, or config loader until the CLI
@@ -282,8 +282,8 @@ The demo should make the product obvious in under one minute.
 Run it with:
 
 ```bash
-npm run example:agent
-npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+pnpm example:deepseek-realistic
+npm run langdrift -- run ./examples/scenarios/deepseek-realistic-routing.yaml --target http://127.0.0.1:3002/api/agent
 ```
 
 The command exits non-zero because the French locale fails by design.

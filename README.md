@@ -43,34 +43,24 @@ That is the kind of failure LangDrift should make visible.
 
 ## What Works Today
 
-Run a localized scenario against an HTTP agent endpoint:
-
-```bash
-npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
-```
-
 LangDrift can:
 
-- load an explicit YAML scenario
-- call a strict HTTP agent target across multiple locales
+- load a YAML scenario
+- call an HTTP agent target across multiple locales
 - assert required tool calls and shallow tool arguments
 - assert forbidden tool calls did not happen
 - report pass/fail by locale in plain terminal output
 - exit non-zero on failure
-- run a tiny demo support agent with an intentional localized failure
 
-## Try The Demo
+## Demo
 
-Start the example support agent:
-
-```bash
-npm run example:agent
-```
-
-In another terminal, run the scenario:
+LangDrift ships with a DeepSeek-backed agent that demonstrates real cross-locale
+tool-call drift. With equivalent natural phrasing across 8 languages, Swahili
+and Mongolian consistently route to the wrong tool while European and Arabic
+locales pass.
 
 ```bash
-npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+DEEPSEEK_API_KEY=... pnpm benchmark:deepseek-realistic
 ```
 
 Expected result:
@@ -78,26 +68,18 @@ Expected result:
 ```text
 LangDrift run
 
-Scenario: refund_request
-Target: http://127.0.0.1:3000/api/agent
+Scenario: deepseek_realistic_routing
+Target: http://127.0.0.1:3002/api/agent
 
 Locale  Status  Detail
 en      pass    create_refund_ticket
-es      pass    create_refund_ticket
-fr      fail    expected create_refund_ticket, got no tool calls
-
-Result: failed, 1 of 3 locales failed
-```
-
-The French failure is intentional. It demonstrates the first product promise:
-same intent, different locale, different behavior.
-
-## Real LLM Demo
-
-LangDrift also includes a DeepSeek-backed support agent demo:
-
-```bash
-DEEPSEEK_API_KEY=... npm run benchmark:deepseek
+fr      pass    create_refund_ticket
+ar      pass    create_refund_ticket
+sw      fail    expected create_refund_ticket, got check_payment_status
+cy      pass    create_refund_ticket
+yo      fail    expected create_refund_ticket, got no tool calls
+eu      pass    create_refund_ticket
+mn      fail    expected create_refund_ticket, got check_payment_status
 ```
 
 See [DeepSeek Demo](docs/deepseek-demo.md).

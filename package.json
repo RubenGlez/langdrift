@@ -8,7 +8,6 @@
   },
   "scripts": {
     "langdrift": "node ./src/cli.ts",
-    "example:agent": "node ./examples/support-agent/server.ts",
     "example:deepseek-agent": "node ./examples/deepseek-support-agent/server.ts",
     "benchmark:deepseek": "node ./examples/deepseek-support-agent/benchmark.ts",
     "benchmark:deepseek-lowresource": "SCENARIO=./examples/scenarios/deepseek-lowresource-refund.yaml node ./examples/deepseek-support-agent/benchmark.ts",

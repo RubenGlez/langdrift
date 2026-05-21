@@ -1,6 +1,6 @@
 # DeepSeek Demo
 
-Lokalite can run against a real LLM-backed agent through the same HTTP target
+LangDrift can run against a real LLM-backed agent through the same HTTP target
 contract used by the deterministic example.
 
 The DeepSeek demo uses the official OpenAI-compatible Chat Completions API at
@@ -15,7 +15,7 @@ DEEPSEEK_API_KEY=... npm run example:deepseek-agent
 In another terminal:
 
 ```bash
-npm run lokalite -- run ./examples/scenarios/deepseek-refund-request.yaml --target http://127.0.0.1:3001/api/agent
+npm run langdrift -- run ./examples/scenarios/deepseek-refund-request.yaml --target http://127.0.0.1:3001/api/agent
 ```
 
 Optional model override:

@@ -6,7 +6,7 @@ export function formatTerminalReport(run: RunResult): string {
   const statusWidth = "Status".length;
 
   const lines = [
-    "Lokalite run",
+    "LangDrift run",
     "",
     `Scenario: ${run.scenarioId}`,
     `Target: ${run.target}`,

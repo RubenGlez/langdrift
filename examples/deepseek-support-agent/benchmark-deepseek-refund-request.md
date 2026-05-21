@@ -22,7 +22,7 @@ Duration: 6109 ms
 Exit code: 0
 
 ```text
-Lokalite run
+LangDrift run
 
 Scenario: deepseek_refund_request
 Target: http://127.0.0.1:3001/api/agent

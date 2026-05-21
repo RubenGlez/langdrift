@@ -26,7 +26,7 @@ Duration: 24307 ms
 Exit code: 1
 
 ```text
-Lokalite run
+LangDrift run
 
 Scenario: deepseek_realistic_routing
 Target: http://127.0.0.1:3002/api/agent
@@ -50,7 +50,7 @@ Duration: 20831 ms
 Exit code: 1
 
 ```text
-Lokalite run
+LangDrift run
 
 Scenario: deepseek_realistic_routing
 Target: http://127.0.0.1:3002/api/agent
@@ -74,7 +74,7 @@ Duration: 20811 ms
 Exit code: 1
 
 ```text
-Lokalite run
+LangDrift run
 
 Scenario: deepseek_realistic_routing
 Target: http://127.0.0.1:3002/api/agent

@@ -42,7 +42,7 @@ function parseArgs(args: string[]): CliOptions {
 }
 
 function usage(): string {
-  return "Usage: lokalite run <scenario.yaml> --target <url>";
+  return "Usage: langdrift run <scenario.yaml> --target <url>";
 }
 
 main().catch((error: unknown) => {

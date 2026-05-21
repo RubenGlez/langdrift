@@ -2,21 +2,21 @@
 
 ## North Star
 
-Lokalite is a locale-aware eval harness for AI workflows.
+LangDrift is a locale-aware eval harness for AI workflows.
 
 Its purpose is to answer one question clearly:
 
 > Given the same user intent across locales, does the AI workflow preserve
 > behavior?
 
-This means Lokalite should test localized AI behavior, not only translated
+This means LangDrift should test localized AI behavior, not only translated
 strings.
 
 ## Product Strategy
 
 Build an investigation tool first, not a platform.
 
-Lokalite should be useful for research, demos, and local developer
+LangDrift should be useful for research, demos, and local developer
 workflows. A dashboard, hosted service, prompt editor, trace ingestion, MCP
 server, or translation management system can come later only if the core signal
 is proven.
@@ -25,7 +25,7 @@ is proven.
 
 AI workflows can drift across languages in ways developers do not currently see.
 
-Lokalite should help detect:
+LangDrift should help detect:
 
 - tool-call drift
 - missing or wrong tool arguments
@@ -45,7 +45,7 @@ Run one localized scenario from the terminal against one HTTP target.
 Example:
 
 ```bash
-npm run lokalite -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
 ```
 
 Minimum scenario shape:
@@ -114,8 +114,8 @@ Outside this milestone:
 
 Success criteria:
 
-- A developer can point Lokalite at a local agent endpoint.
-- Lokalite can run the same intent across at least three locales.
+- A developer can point LangDrift at a local agent endpoint.
+- LangDrift can run the same intent across at least three locales.
 - The output clearly shows pass/fail by locale.
 - The demo shows a concrete cross-locale tool-call regression in under one
   minute.
@@ -124,7 +124,7 @@ Success criteria:
 
 Goal:
 
-Make Lokalite trustworthy in CI by expanding the deterministic assertion set.
+Make LangDrift trustworthy in CI by expanding the deterministic assertion set.
 
 Initial assertions:
 
@@ -144,8 +144,8 @@ Avoid in this milestone:
 
 Success criteria:
 
-- Lokalite can catch invalid structured output.
-- Lokalite can catch placeholder or glossary corruption.
+- LangDrift can catch invalid structured output.
+- LangDrift can catch placeholder or glossary corruption.
 - Results are stable enough for CI.
 
 ## Milestone 3: Config, Suites, And Static Results
@@ -156,7 +156,7 @@ Make local and CI usage convenient across more than one scenario.
 
 Deliverables:
 
-- `lokalite.config.ts` or `lokalite.config.json`.
+- `langdrift.config.ts` or `langdrift.config.json`.
 - Multiple scenarios and suites.
 - JSON scenario support.
 - JSON result output.
@@ -173,12 +173,12 @@ Success criteria:
 
 Goal:
 
-Use Lokalite to investigate behavior drift across models, locales, and prompts.
+Use LangDrift to investigate behavior drift across models, locales, and prompts.
 
 Example:
 
 ```bash
-lokalite compare --models gpt-4.1-mini,claude-haiku,qwen
+langdrift compare --models gpt-4.1-mini,claude-haiku,qwen
 ```
 
 Example output:
@@ -201,7 +201,7 @@ Deliverables:
 
 Success criteria:
 
-- Lokalite can produce a small, publishable investigation.
+- LangDrift can produce a small, publishable investigation.
 - The investigation demonstrates at least one real cross-locale behavior drift.
 - The results are understandable without reading the code.
 
@@ -277,7 +277,7 @@ Possible integrations:
 
 Integration principle:
 
-Lokalite should complement existing eval and observability tools, not replace
+LangDrift should complement existing eval and observability tools, not replace
 them.
 
 Success criteria:
@@ -308,11 +308,11 @@ Suggested shape:
 > We tested the same AI workflow in multiple languages and found behavior drift.
 > Here is the OSS harness we used.
 
-This gives Lokalite a reason to exist even before it becomes a polished tool.
+This gives LangDrift a reason to exist even before it becomes a polished tool.
 
 ## Definition Of Success
 
-Lokalite is worth continuing if it can make this failure visible:
+LangDrift is worth continuing if it can make this failure visible:
 
 ```text
 English user asks for refund  -> create_refund_ticket
@@ -321,4 +321,4 @@ French user asks for refund   -> no tool call
 Japanese user asks for refund -> invalid structured output
 ```
 
-If Lokalite can reliably surface these differences, it has a real OSS niche.
+If LangDrift can reliably surface these differences, it has a real OSS niche.

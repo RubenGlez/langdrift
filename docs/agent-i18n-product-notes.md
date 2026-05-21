@@ -2,17 +2,17 @@
 
 ## Thesis
 
-Lokalite should not try to become another general-purpose translation management system. The stronger opportunity is to become an open-source i18n lab for AI agents and LLM applications.
+LangDrift should not try to become another general-purpose translation management system. The stronger opportunity is to become an open-source i18n lab for AI agents and LLM applications.
 
 Modern AI products do not only have localizable UI strings. They have prompts, tool descriptions, structured outputs, agent handoffs, safety policies, tone rules, retrieval snippets, and multi-turn behavior. Those surfaces can drift across languages in ways traditional localization tools do not catch.
 
-The core question Lokalite should answer is:
+The core question LangDrift should answer is:
 
 > Will this agent behave correctly when the user speaks another language?
 
 ## Positioning
 
-Lokalite is a multilingual behavior testing tool for AI agents.
+LangDrift is a multilingual behavior testing tool for AI agents.
 
 Short version:
 
@@ -20,11 +20,11 @@ Short version:
 
 Longer version:
 
-> Lokalite helps developers test whether AI agents preserve intent, tool behavior, structured output, glossary rules, tone, and safety behavior across locales.
+> LangDrift helps developers test whether AI agents preserve intent, tool behavior, structured output, glossary rules, tone, and safety behavior across locales.
 
 ## What This Is Not
 
-Lokalite should avoid competing directly with mature localization platforms.
+LangDrift should avoid competing directly with mature localization platforms.
 
 It is not:
 
@@ -48,7 +48,7 @@ Existing i18n tools are good at managing translation assets. Existing AI eval to
 - Does tone drift when translated into a culture with different register expectations?
 - Do retrieval or support answers degrade for non-English users?
 
-This is where Lokalite can be useful.
+This is where LangDrift can be useful.
 
 ## Target Users
 
@@ -76,12 +76,12 @@ Recommended order:
 3. Local HTML report.
 4. CI-friendly exit codes.
 5. Optional web UI once the evaluation model is proven.
-6. Optional MCP server so coding agents can call Lokalite.
+6. Optional MCP server so coding agents can call LangDrift.
 
 ## Example Workflow
 
 ```bash
-lokalite run --config lokalite.config.ts
+langdrift run --config langdrift.config.ts
 ```
 
 Example result:
@@ -116,7 +116,7 @@ password_reset
 
 ## Core Assertions
 
-Lokalite should support focused, deterministic checks first:
+LangDrift should support focused, deterministic checks first:
 
 - Required tool call happened.
 - Required shallow tool arguments matched.
@@ -148,7 +148,7 @@ locales:
         name: escalate_to_human
       glossary:
         preserve:
-          - 'Lokalite'
+          - 'LangDrift'
 
   es:
     input: 'Me cobraron dos veces la suscripcion. Puedes devolverme uno de los cargos?'
@@ -162,12 +162,12 @@ locales:
         name: escalate_to_human
       glossary:
         preserve:
-          - 'Lokalite'
+          - 'LangDrift'
 ```
 
 ## Possible Adapters
 
-Lokalite can stay useful by integrating at the boundary rather than owning the whole agent stack.
+LangDrift can stay useful by integrating at the boundary rather than owning the whole agent stack.
 
 Potential target adapters:
 
@@ -181,7 +181,7 @@ Potential target adapters:
 
 ## MCP Opportunity
 
-An MCP server could let coding agents ask Lokalite to perform i18n-specific work:
+An MCP server could let coding agents ask LangDrift to perform i18n-specific work:
 
 - Extract user-facing strings from a diff.
 - Generate missing locale variants for scenarios.
@@ -190,7 +190,7 @@ An MCP server could let coding agents ask Lokalite to perform i18n-specific work
 - Summarize locale-specific regressions.
 - Comment on a PR with i18n risks.
 
-This would make Lokalite part of the agent ecosystem rather than only a standalone app.
+This would make LangDrift part of the agent ecosystem rather than only a standalone app.
 
 ## Strategic Test
 
@@ -208,8 +208,8 @@ That version is too crowded and not differentiated enough.
 
 - Should the CLI stay the primary interface, or should a report viewer become a near-term priority?
 - Should scenarios be authored manually, generated from English, or both?
-- How much should Lokalite depend on real model calls versus replayed traces?
+- How much should LangDrift depend on real model calls versus replayed traces?
 - Should assertions be deterministic first, LLM-judged later, or both from day one?
 - Which adapter gives the strongest demo with the least integration burden?
 - Should the project support source-code string extraction, or avoid that until agent evals are proven?
-- Should Lokalite store history, or should CI artifacts be enough initially?
+- Should LangDrift store history, or should CI artifacts be enough initially?

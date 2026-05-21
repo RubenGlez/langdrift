@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Run the CLI
 node ./src/cli.ts run <scenario.yaml> --target <url>
 # or via pnpm script
-pnpm lokalite -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+pnpm langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
 
 # Run tests (Node built-in test runner)
 pnpm test
@@ -30,7 +30,7 @@ TypeScript is not compiled — Node runs `.ts` files directly (Node >= 24 with n
 
 ## Architecture
 
-Lokalite is a locale-aware eval harness for AI agent workflows. The core question it answers: does an AI agent still behave correctly when the same user intent is expressed in different languages?
+LangDrift is a locale-aware eval harness for AI agent workflows. The core question it answers: does an AI agent still behave correctly when the same user intent is expressed in different languages?
 
 **Data flow:**
 
@@ -50,7 +50,7 @@ CLI (cli.ts)
 - `LocaleResult` — per-locale pass/fail with a detail string
 - `RunResult` — full run output consumed by the reporter
 
-**HTTP target contract** — Lokalite POSTs `{ locale, input, scenarioId }` to the target URL. The agent must respond with `{ text, toolCalls, structured }`. Missing fields normalize to `""`, `[]`, `null`.
+**HTTP target contract** — LangDrift POSTs `{ locale, input, scenarioId }` to the target URL. The agent must respond with `{ text, toolCalls, structured }`. Missing fields normalize to `""`, `[]`, `null`.
 
 **Assertions** are deterministic only (no LLM-as-judge). Checks: required tool call name, required shallow argument key/value pairs, forbidden tool call name. Argument checks are shallow — extra keys in the actual response are ignored.
 

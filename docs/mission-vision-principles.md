@@ -7,7 +7,7 @@ languages, regions, and cultures.
 
 ## Vision
 
-Lokalite should become a lightweight, open-source way to test localized AI
+LangDrift should become a lightweight, open-source way to test localized AI
 behavior before it reaches users.
 
 The long-term vision is not to replace translation platforms or observability
@@ -32,7 +32,7 @@ AI workflows can:
 If those behaviors change across locales, the product is not fully localized,
 even if every static string has been translated.
 
-Lokalite's perspective is:
+LangDrift's perspective is:
 
 > Localized AI experiences need behavior tests, not just translation checks.
 
@@ -40,7 +40,7 @@ Lokalite's perspective is:
 
 ### Behavior Over Text
 
-Text matters, but behavior matters more. Lokalite should prioritize whether the
+Text matters, but behavior matters more. LangDrift should prioritize whether the
 workflow did the right thing: selected the right tool, preserved structure,
 followed policy, and respected locale expectations.
 
@@ -62,7 +62,7 @@ or integrations can come later if the core harness proves useful.
 
 ### Complement Existing Tools
 
-Lokalite should not try to replace translation management, tracing, or generic
+LangDrift should not try to replace translation management, tracing, or generic
 LLM eval platforms. It should fill the focused gap between them: localized AI
 behavior verification.
 
@@ -73,7 +73,7 @@ before expanding into a larger product surface.
 
 ## Product Promise
 
-Lokalite should make this kind of issue easy to see:
+LangDrift should make this kind of issue easy to see:
 
 ```text
 Same intent, different locale, different behavior.
@@ -85,7 +85,7 @@ The first useful product promise is:
 
 ## Non-Goals
 
-Lokalite should not start as:
+LangDrift should not start as:
 
 - a hosted SaaS
 - a full translation management system
@@ -112,11 +112,11 @@ workflows that use:
 
 ## Success Criteria
 
-The project is worth continuing if Lokalite can help developers find failures
+The project is worth continuing if LangDrift can help developers find failures
 that would otherwise be invisible in normal English-first testing.
 
 The clearest early success is:
 
-> A developer runs Lokalite in CI and catches a locale-specific agent regression
+> A developer runs LangDrift in CI and catches a locale-specific agent regression
 > before shipping.
 

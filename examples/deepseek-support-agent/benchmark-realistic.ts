@@ -32,7 +32,7 @@ try {
 
   for (let index = 0; index < iterations; index += 1) {
     const startedAt = performance.now();
-    const run = await runLokalite();
+    const run = await runLangDrift();
     const durationMs = Math.round(performance.now() - startedAt);
 
     runs.push({
@@ -66,7 +66,7 @@ async function waitForServer(): Promise<void> {
   throw new Error(`Server did not start.\n${serverOutput}`);
 }
 
-async function runLokalite(): Promise<{ exitCode: number; output: string }> {
+async function runLangDrift(): Promise<{ exitCode: number; output: string }> {
   const child = spawn(
     process.execPath,
     ["./src/cli.ts", "run", scenarioPath, "--target", target],

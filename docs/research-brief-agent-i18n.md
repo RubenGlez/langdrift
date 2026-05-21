@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This brief collects research signals that support Lokalite's product thesis:
+This brief collects research signals that support LangDrift's product thesis:
 
 > From translated strings to localized AI behavior.
 
@@ -38,7 +38,7 @@ which suggests the problem is no longer theoretical.
 
 Product implication:
 
-Lokalite should not frame multilingual tool calls as a niche edge case. It is
+LangDrift should not frame multilingual tool calls as a niche edge case. It is
 already a benchmarked capability. The product opportunity is to bring this from
 research benchmarks into everyday app and agent development.
 
@@ -56,7 +56,7 @@ function names, arguments, missing parameters, and unnecessary calls matter.
 
 Product implication:
 
-Lokalite should test localized behavior at the action boundary, not just the
+LangDrift should test localized behavior at the action boundary, not just the
 response-text boundary. A useful product should inspect tool calls and structured
 outputs directly.
 
@@ -93,7 +93,7 @@ behavior.
 
 Product implication:
 
-Lokalite should eventually support safety parity checks across locales. The core workflow
+LangDrift should eventually support safety parity checks across locales. The core workflow
 can begin with deterministic guardrails, then later add review workflows or
 judge-based checks.
 
@@ -109,15 +109,15 @@ human annotators, and model judges are often English-centered.
 
 Product implication:
 
-Lokalite should be careful with LLM-as-judge features. Deterministic assertions
+LangDrift should be careful with LLM-as-judge features. Deterministic assertions
 should come first. Judge-based evaluation should be optional, transparent, and
 treated as a complement rather than the foundation.
 
-## What This Means For Lokalite
+## What This Means For LangDrift
 
 The research supports a focused north star:
 
-> Lokalite is a locale-aware test harness for AI behavior.
+> LangDrift is a locale-aware test harness for AI behavior.
 
 The practical value is not "translate this string." The value is:
 
@@ -130,7 +130,7 @@ The practical value is not "translate this string." The value is:
 
 ## Strongest Product Hypothesis
 
-Developers will understand the value fastest if Lokalite catches a concrete
+Developers will understand the value fastest if LangDrift catches a concrete
 localized action failure:
 
 ```text
@@ -169,12 +169,12 @@ These questions should guide future product experiments:
   locale-specific variants?
 - Does a locale matrix report reveal failures faster than generic trace
   dashboards?
-- Can Lokalite integrate with existing eval tools instead of replacing them?
+- Can LangDrift integrate with existing eval tools instead of replacing them?
 
 ## Tooling Gap
 
 Existing observability and eval platforms can often be configured to test
-localized cases. The gap for Lokalite is not raw capability. The gap is product
+localized cases. The gap for LangDrift is not raw capability. The gap is product
 focus:
 
 - locale-first scenario modeling

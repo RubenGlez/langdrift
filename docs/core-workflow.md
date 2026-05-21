@@ -2,7 +2,7 @@
 
 ## Goal
 
-Keep Lokalite focused on the smallest useful workflow:
+Keep LangDrift focused on the smallest useful workflow:
 
 > A developer can define multilingual scenarios for an AI agent, run them locally or in CI, and see whether behavior changes across locales.
 
@@ -20,7 +20,7 @@ As a developer building an AI support agent, I want to run the same scenario in 
 
 ## Core Workflow
 
-Lokalite runs explicit locale variants against an agent target, applies
+LangDrift runs explicit locale variants against an agent target, applies
 deterministic assertions, and reports behavior drift by locale.
 
 ### 1. Direct CLI Run
@@ -30,11 +30,11 @@ Run one explicit scenario file against one HTTP target passed through the CLI.
 Example:
 
 ```bash
-npm run lokalite -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
 ```
 
 The direct CLI workflow does not require a config file. A future
-`lokalite.config.ts` or `lokalite.config.json` can add default locales, agents,
+`langdrift.config.ts` or `langdrift.config.json` can add default locales, agents,
 suites, and glossary settings.
 
 ### 2. Scenario Format
@@ -159,7 +159,7 @@ Generate a plain, CI-readable terminal report.
 Example:
 
 ```text
-Lokalite run
+LangDrift run
 
 Scenario: refund_request
 Target: http://127.0.0.1:3000/api/agent
@@ -208,15 +208,15 @@ Recommended response shape:
 }
 ```
 
-Fields may be omitted by the target, but Lokalite should normalize missing
+Fields may be omitted by the target, but LangDrift should normalize missing
 `text`, `toolCalls`, and `structured` values to `""`, `[]`, and `null`.
 
-This keeps Lokalite independent from any one agent framework while giving the
+This keeps LangDrift independent from any one agent framework while giving the
 first runner a strict, predictable contract.
 
 ## Implementation
 
-Lokalite uses Node and TypeScript with no runtime dependencies.
+LangDrift uses Node and TypeScript with no runtime dependencies.
 
 Key files:
 
@@ -237,7 +237,7 @@ workflow needs that complexity.
 
 Planned expansions:
 
-- `lokalite.config.ts` or `lokalite.config.json`
+- `langdrift.config.ts` or `langdrift.config.json`
 - multiple scenarios and suites
 - JSON scenario files
 - static HTML report
@@ -283,14 +283,14 @@ Run it with:
 
 ```bash
 npm run example:agent
-npm run lokalite -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
 ```
 
 The command exits non-zero because the French locale fails by design.
 
 ## Success Criteria
 
-Lokalite is successful when:
+LangDrift is successful when:
 
 - It can be run from the terminal.
 - It tests at least three locales.

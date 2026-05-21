@@ -1,13 +1,13 @@
 {
-  "name": "lokalite",
+  "name": "langdrift",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "bin": {
-    "lokalite": "./src/cli.ts"
+    "langdrift": "./src/cli.ts"
   },
   "scripts": {
-    "lokalite": "node ./src/cli.ts",
+    "langdrift": "node ./src/cli.ts",
     "example:agent": "node ./examples/support-agent/server.ts",
     "example:deepseek-agent": "node ./examples/deepseek-support-agent/server.ts",
     "benchmark:deepseek": "node ./examples/deepseek-support-agent/benchmark.ts",

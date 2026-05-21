@@ -1,18 +1,18 @@
-# Lokalite
+# LangDrift
 
-Lokalite is a locale-aware eval harness for AI workflows.
+LangDrift is a locale-aware eval harness for AI workflows.
 
 Core belief:
 
 > AI localization is moving from translated strings to localized behavior.
 
 Traditional i18n asks whether the product text exists in another language.
-Lokalite asks whether an AI workflow still behaves correctly when the user
+LangDrift asks whether an AI workflow still behaves correctly when the user
 speaks another language, uses another region, or expects another cultural norm.
 
 ## What It Tests
 
-Lokalite helps developers detect cross-locale behavior drift in:
+LangDrift helps developers detect cross-locale behavior drift in:
 
 - agent tool calls
 - tool arguments
@@ -39,17 +39,17 @@ French user asks for refund   -> no tool call
 Japanese user asks for refund -> invalid structured output
 ```
 
-That is the kind of failure Lokalite should make visible.
+That is the kind of failure LangDrift should make visible.
 
 ## What Works Today
 
 Run a localized scenario against an HTTP agent endpoint:
 
 ```bash
-npm run lokalite -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
 ```
 
-Lokalite can:
+LangDrift can:
 
 - load an explicit YAML scenario
 - call a strict HTTP agent target across multiple locales
@@ -70,13 +70,13 @@ npm run example:agent
 In another terminal, run the scenario:
 
 ```bash
-npm run lokalite -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
+npm run langdrift -- run ./examples/scenarios/refund-request.yaml --target http://127.0.0.1:3000/api/agent
 ```
 
 Expected result:
 
 ```text
-Lokalite run
+LangDrift run
 
 Scenario: refund_request
 Target: http://127.0.0.1:3000/api/agent
@@ -94,7 +94,7 @@ same intent, different locale, different behavior.
 
 ## Real LLM Demo
 
-Lokalite also includes a DeepSeek-backed support agent demo:
+LangDrift also includes a DeepSeek-backed support agent demo:
 
 ```bash
 DEEPSEEK_API_KEY=... npm run benchmark:deepseek
@@ -113,6 +113,6 @@ See [DeepSeek Demo](docs/deepseek-demo.md).
 
 ## Working Definition
 
-Lokalite is successful if it becomes the simplest way for a developer to answer:
+LangDrift is successful if it becomes the simplest way for a developer to answer:
 
 > Did this AI workflow still work when the user used another language?

@@ -93,7 +93,7 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 - Report pass/fail with failure mode by locale in terminal output
 - Report the same run as stable JSON for CI and tooling
 - Exit non-zero on failure (CI-ready)
-- Generate a starter scenario with `langdrift init`
+- Generate starter scenarios with `langdrift init --template support|ecommerce|scheduling|generic`
 - Run multi-iteration benchmarks, write markdown reports with per-locale failure tables
 
 ## Quick start
@@ -119,7 +119,7 @@ Expected result: the run exits non-zero and reports `2 of 12 locales failed`.
 **1. Create a starter scenario:**
 
 ```bash
-node ./src/cli.ts init ./my-scenario.yaml
+node ./src/cli.ts init ./my-scenario.yaml --template support
 ```
 
 Then edit the generated YAML:
@@ -242,7 +242,7 @@ CLI (cli.ts)
 **CLI usage:**
 
 ```bash
-langdrift init [scenario.yaml]
+langdrift init [scenario.yaml] [--template support|ecommerce|scheduling|generic]
 langdrift run <scenario.yaml> --target <url> [--format text|json]
 ```
 

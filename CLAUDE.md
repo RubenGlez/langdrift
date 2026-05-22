@@ -10,7 +10,7 @@ node ./src/cli.ts run <scenario.yaml> --target <url>
 node ./src/cli.ts run <scenario.yaml> --target <url> --format json
 
 # Create a starter scenario
-node ./src/cli.ts init [scenario.yaml]
+node ./src/cli.ts init [scenario.yaml] [--template support|ecommerce|scheduling|generic]
 
 # Run tests (Node built-in test runner)
 pnpm test

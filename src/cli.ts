@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { initScenario } from "./init.ts";
+import { INIT_TEMPLATES, initScenario, isInitTemplate } from "./init.ts";
 import { loadScenario } from "./scenario.ts";
 import { runScenario } from "./runner.ts";
 import { formatJsonReport } from "./reportJson.ts";
@@ -17,13 +17,14 @@ type RunOptions = {
 type InitOptions = {
   command: "init";
   path: string;
+  template: "support" | "ecommerce" | "scheduling" | "generic";
 };
 
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
 
   if (options.command === "init") {
-    const path = await initScenario(options.path);
+    const path = await initScenario(options.path, options.template);
     process.stdout.write(`Created ${path}\n`);
     return;
   }
@@ -42,8 +43,15 @@ async function main(): Promise<void> {
 
 function parseArgs(args: string[]): CliOptions {
   if (args[0] === "init") {
-    const path = args[1] && !args[1].startsWith("--") ? args[1] : "langdrift.scenario.yaml";
-    return { command: "init", path };
+    const path = parseInitPath(args.slice(1));
+    const templateFlagIndex = args.indexOf("--template");
+    const template = templateFlagIndex === -1 ? "support" : args[templateFlagIndex + 1];
+
+    if (!template || !isInitTemplate(template)) {
+      throw new Error(usage());
+    }
+
+    return { command: "init", path, template };
   }
 
   if (args[0] !== "run") {
@@ -73,10 +81,25 @@ function parseArgs(args: string[]): CliOptions {
   };
 }
 
+function parseInitPath(args: string[]): string {
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === "--template") {
+      index += 1;
+      continue;
+    }
+
+    if (!args[index].startsWith("--")) {
+      return args[index];
+    }
+  }
+
+  return "langdrift.scenario.yaml";
+}
+
 function usage(): string {
   return [
     "Usage:",
-    "  langdrift init [scenario.yaml]",
+    `  langdrift init [scenario.yaml] [--template ${INIT_TEMPLATES.join("|")}]`,
     "  langdrift run <scenario.yaml> --target <url> [--format text|json]",
   ].join("\n");
 }

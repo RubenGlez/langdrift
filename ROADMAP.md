@@ -6,11 +6,11 @@ LangDrift starts as an experiment, but the product direction is broader: make mu
 
 Goal: make the first run obvious and repeatable.
 
-Current status: started. `langdrift init`, JSON run output, and the no-key fake agent demo are implemented.
+Current status: started. `langdrift init`, init templates, JSON run output, and the no-key fake agent demo are implemented.
 
 - Package the CLI so teams can install and run `langdrift` directly.
 - Add `langdrift init` to generate a starter config and scenario template.
-- Add scenario templates for support, ecommerce, scheduling, and generic tool-calling agents.
+- Add scenario templates for support, ecommerce, scheduling, and generic tool-calling agents. Done.
 - Add stable JSON output alongside the terminal report.
 - Provide a fake local agent so the main demo runs without an API key. Done.
 - Document the minimum HTTP target contract with request and response examples.

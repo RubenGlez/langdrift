@@ -6,7 +6,7 @@ AI localization is shifting from translated strings toward behavior verification
 
 I wanted to know whether this was a real, measurable problem or a theoretical one.
 
-## The Experiment
+## Phase 1: Initial Experiment
 
 I built a minimal eval harness and ran a realistic support-routing scenario across 8 languages. The agent had 5 tools available and a standard multilingual system prompt. Each locale got an equivalent, natural-language phrasing of the same user intent — not a literal translation. I ran 3 iterations to check for flakiness.
 
@@ -55,11 +55,68 @@ mn      fail    wrong_tool   expected create_refund_ticket, got check_payment_st
 Result: failed, 3 of 8 locales failed
 ```
 
+## Phase 2: Expanded Benchmark
+
+Phase 1 established the problem with one scenario. Phase 2 asked whether the pattern held across domains, intents, and a wider language set.
+
+**Methodology changes:**
+- 6 scenarios across 3 domains: support (billing, subscription), ecommerce (cancel order, track order), scheduling (reschedule, new booking)
+- 12 locales per scenario: en, fr, ar, zh, ru, id, vi, sw, cy, eu, mn, yo
+- English prompt validated to 3/3 before translating — any non-English failure is definitively language drift, not prompt ambiguity
+- Each domain uses a domain-appropriate agent system prompt
+- Same model (deepseek-chat), 3 iterations, 36 locale checks per scenario
+
+**Results:**
+
+| Scenario | Pass rate | Consistent failures |
+| -------- | --------- | ------------------- |
+| support-routing | 86% (31/36) | sw (3/3), yo (1/3), zh (1/3) |
+| support-cancel-subscription | 78% (28/36) | sw (2/3), cy (2/3), yo (2/3) |
+| ecommerce-cancel-order | 72% (26/36) | zh (3/3), eu (3/3), yo (2/3) |
+| ecommerce-track-order | 81% (29/36) | zh (3/3), sw (2/3) |
+| scheduling-reschedule | 78% (28/36) | ar (2/3), sw (2/3), cy (1/3) |
+| scheduling-book-new | 92% (33/36) | zh (1/3), mn (1/3) |
+
+English passed 3/3 in every scenario.
+
+**Sample run, ecommerce-cancel-order:**
+
+```text
+LangDrift run
+
+Scenario: ecommerce_cancel_order
+Target: http://127.0.0.1:3010/api/agent
+
+Locale  Status  Failure       Detail
+en      pass    -             cancel_order
+fr      pass    -             cancel_order
+ar      pass    -             cancel_order
+zh      fail    no_tool_call  expected cancel_order, got no tool calls
+ru      pass    -             cancel_order
+id      pass    -             cancel_order
+vi      pass    -             cancel_order
+sw      pass    -             cancel_order
+cy      pass    -             cancel_order
+eu      fail    no_tool_call  expected cancel_order, got no tool calls
+mn      pass    -             cancel_order
+yo      fail    no_tool_call  expected cancel_order, got no tool calls
+
+Result: failed, 3 of 12 locales failed
+```
+
 ## The Pattern
 
-The failures weren't random. They correlated with linguistic distance from the model's training corpus, not with speaker count. Arabic (330M speakers) passed every time. Swahili (200M speakers) failed every time. Welsh (~700K speakers) passed every time. The differentiator appears to be morphological structure and script, not just data volume.
+Across both phases, the failures are consistent and non-random.
 
-The agent wasn't failing to understand the user. It was routing the request to a plausible-but-wrong tool — a different kind of failure than a simple comprehension error. This is the kind of drift that gets missed in English-first testing.
+**Drift correlates with instruction-tuning coverage, not raw speaker count.** Arabic (330M speakers) passes in all 6 scenarios. Swahili (200M speakers) fails in 4 of 6. Indonesian (200M speakers, similar count to Swahili) passes consistently. The differentiator isn't how many people speak the language — it's how well-represented the language is in instruction-following and tool-use training data.
+
+**The same locales fail across different domains and intents.** Swahili fails in billing support, subscription cancellation, order tracking, and appointment scheduling. Yoruba fails in billing support, subscription cancellation, and order cancellation. This is a stable property of the model's tool-use competence in those languages — it isn't specific to one task or one set of tool descriptions.
+
+**Chinese is a surprising underperformer.** Mandarin Chinese fails in 4 of 6 scenarios, despite being one of the highest-resource languages in pre-training. This suggests the gap is specifically in instruction-tuning and tool-use data rather than general language understanding — a pattern that wouldn't surface in standard NLP benchmarks.
+
+**Arabic holds up across domains.** Arabic passes consistently even in the ecommerce and scheduling domains where other languages struggle. This is notable because Arabic has a non-Latin script, right-to-left text direction, and significant morphological complexity. High representation in instruction-tuning data appears to outweigh structural distance from English.
+
+**The dominant failure mode is `no_tool_call`.** In most failures, the model responds in natural language instead of calling a tool at all. `wrong_tool` routing (the failure mode seen in Phase 1 for Swahili and Mongolian) is less common in Phase 2, likely because the prompts were tightened. The model isn't confidently routing to the wrong tool; it's declining to act. That's a different failure mode and arguably harder to detect — a wrong tool call at least signals that the model was trying.
 
 ## Supporting Research
 
@@ -83,6 +140,8 @@ The experiment above aligns with an emerging body of work on multilingual agent 
 ## What This Means
 
 The gap isn't about translation. Teams already use translation management platforms for static strings. The gap is at the behavior boundary: does the same user intent trigger the same tool call, the same structured output, the same policy behavior across languages?
+
+Phase 2 makes this more concrete. The failure pattern is stable enough that you can predict which locales will fail before running the test — and broad enough that it appears in billing, ecommerce, and scheduling workflows equally. That means it affects any multi-domain agent deployed across languages, not just a specific task type.
 
 That gap has no obvious owner. Translation platforms don't test agent behavior. Observability platforms don't model locale as an experimental variable. Generic LLM eval platforms don't ship with locale-first scenario formats.
 

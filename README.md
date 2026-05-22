@@ -8,11 +8,11 @@ AI localization is moving from translated strings to localized behavior. When yo
 
 I wanted to know how bad the drift actually is, so I ran a benchmark.
 
-## The findings
+## The experiment
 
-I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 locales each, using a 5-tool-per-domain agent backed by deepseek-chat. The methodology: write and validate each English prompt to 3/3 pass first, then translate that intent into the other 11 languages. Any failures are definitively language drift, not ambiguous prompts. Three iterations per scenario, 36 locale checks each.
+I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 locales each, using a 5-tool-per-domain agent. The methodology: write and validate each English prompt to 3/3 pass first, then write equivalent natural-language phrasings in the other 11 languages. Any non-English failures are then attributable to language drift, not ambiguous prompts. Three iterations per scenario, 36 locale checks each.
 
-**Results (deepseek-chat, 3 iterations × 12 locales):**
+**Results (3 iterations × 12 locales):**
 
 | Scenario | Pass rate | Failing locales |
 | -------- | --------- | --------------- |
@@ -25,7 +25,7 @@ I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 local
 
 English passed 3/3 in every scenario. The failures are language-specific.
 
-**Drift correlates with training corpus coverage, not speaker count.** Arabic (high-resource, non-Latin script) passes consistently across all 6 scenarios. Swahili and Yoruba fail regularly — not because the intent is unclear, but because the model routes to the wrong tool or drops tool use entirely. Welsh and Basque, despite being European languages, behave like low-resource languages for tool use. Chinese fails more than Russian despite having far more training data overall, suggesting the gap is in instruction-tuning coverage specifically.
+**Failures cluster around the same locales across unrelated domains.** Arabic passes consistently across all 6 scenarios. Swahili and Yoruba fail regularly — the model routes to the wrong tool or drops tool use entirely. Chinese fails more than expected given its resource level, which may suggest the gap is specifically in instruction-tuning and tool-use data. These observations are from a single model and a small number of iterations, so they point at hypotheses rather than conclusions.
 
 ```text
 Scenario: support_routing (sample iteration)
@@ -168,8 +168,8 @@ OPENAI_API_KEY=... pnpm benchmark:scheduling-book
 # Anthropic
 ANTHROPIC_API_KEY=... MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:support
 
-# DeepSeek (the original benchmark that produced the findings above used DeepSeek)
-MODEL_API_KEY=... MODEL_API_URL=https://api.deepseek.com/chat/completions MODEL_NAME=deepseek-chat pnpm benchmark:support
+# Any OpenAI-compatible API
+MODEL_API_KEY=... MODEL_API_URL=https://api.example.com/chat/completions MODEL_NAME=model-name pnpm benchmark:support
 ```
 
 **Included scenarios:**

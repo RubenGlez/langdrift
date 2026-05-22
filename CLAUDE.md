@@ -14,16 +14,11 @@ pnpm test
 # Run a single test file
 node --test tests/scenario.test.ts
 
-# Start the DeepSeek-backed agent (requires DEEPSEEK_API_KEY)
-pnpm example:deepseek-agent
+# Start the example agent
+OPENAI_API_KEY=... pnpm agent
 
-# Run the realistic routing benchmark (shows real cross-locale failures)
-DEEPSEEK_API_KEY=... pnpm benchmark:deepseek-realistic
-
-# Run other benchmarks
-DEEPSEEK_API_KEY=... pnpm benchmark:deepseek
-DEEPSEEK_API_KEY=... pnpm benchmark:deepseek-lowresource
-DEEPSEEK_API_KEY=... pnpm benchmark:deepseek-indirect
+# Run a benchmark
+OPENAI_API_KEY=... pnpm benchmark:support
 ```
 
 TypeScript is not compiled — Node runs `.ts` files directly (Node >= 24 with native strip-types). There is no build step.
@@ -57,6 +52,6 @@ CLI (cli.ts)
 **YAML parser** (`scenario.ts`) is a hand-rolled indent-aware tokenizer with no external dependencies. The project has zero runtime dependencies.
 
 **Examples** (`examples/`) demonstrate a real LLM-backed agent:
-- `deepseek-support-agent/` — DeepSeek-backed agent with multiple benchmark scenarios
+- `agent/` — model-agnostic agent supporting OpenAI, Anthropic, and any OpenAI-compatible API
 
 **Scenarios** (`examples/scenarios/*.yaml`) — one scenario per file; each locale gets its own `input` and `expect` block.

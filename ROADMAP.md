@@ -6,6 +6,8 @@ LangDrift starts as an experiment, but the product direction is broader: make mu
 
 Goal: make the first run obvious and repeatable.
 
+Current status: started. `langdrift init` and JSON run output are implemented.
+
 - Package the CLI so teams can install and run `langdrift` directly.
 - Add `langdrift init` to generate a starter config and scenario template.
 - Add scenario templates for support, ecommerce, scheduling, and generic tool-calling agents.

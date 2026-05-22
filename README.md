@@ -91,12 +91,20 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 - Assert required shallow tool arguments
 - Assert forbidden tool calls did not happen
 - Report pass/fail with failure mode by locale in terminal output
+- Report the same run as stable JSON for CI and tooling
 - Exit non-zero on failure (CI-ready)
+- Generate a starter scenario with `langdrift init`
 - Run multi-iteration benchmarks, write markdown reports with per-locale failure tables
 
 ## Quick start
 
-**1. Write a scenario:**
+**1. Create a starter scenario:**
+
+```bash
+node ./src/cli.ts init ./my-scenario.yaml
+```
+
+Then edit the generated YAML:
 
 ```yaml
 id: refund_request
@@ -130,6 +138,12 @@ Your agent needs to accept `POST /api/agent` with `{ locale, input, scenarioId }
 
 ```bash
 node ./src/cli.ts run ./my-scenario.yaml --target http://127.0.0.1:3010/api/agent
+```
+
+For CI or downstream tooling, emit JSON:
+
+```bash
+node ./src/cli.ts run ./my-scenario.yaml --target http://127.0.0.1:3010/api/agent --format json
 ```
 
 ## Example agent
@@ -201,6 +215,13 @@ CLI (cli.ts)
 ```
 
 **HTTP contract:** LangDrift POSTs `{ locale, input, scenarioId }` to the target. The agent responds with `{ text, toolCalls, structured }`. Missing fields normalize to `""`, `[]`, `null`.
+
+**CLI usage:**
+
+```bash
+langdrift init [scenario.yaml]
+langdrift run <scenario.yaml> --target <url> [--format text|json]
+```
 
 ## Where this is going
 

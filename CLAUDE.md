@@ -7,6 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Run the CLI
 node ./src/cli.ts run <scenario.yaml> --target <url>
+node ./src/cli.ts run <scenario.yaml> --target <url> --format json
+
+# Create a starter scenario
+node ./src/cli.ts init [scenario.yaml]
 
 # Run tests (Node built-in test runner)
 pnpm test

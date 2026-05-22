@@ -1,18 +1,17 @@
 id: ecommerce_cancel_order
-agent: generic
+agent: ecommerce
 
 # Domain: ecommerce
-# Intent: customer placed an order by mistake and wants to cancel it
+# Intent: customer placed an order by mistake and wants to cancel it immediately
 # Expected tool: cancel_order with reason ordered_by_mistake
 # Confusion risk: process_refund (customer wants money back but item not yet delivered)
 #                 check_order_status (asking about an order)
 #
-# All inputs express the same intent at the same level of directness.
-# Natural phrasing in each language — not literal translations.
+# Baseline English confirmed 3/3 before translation. Natural phrasing in each language.
 
 locales:
   en:
-    input: "Hi, I just placed an order but I made a mistake and need to cancel it."
+    input: "I just ordered something by mistake. I need it cancelled immediately."
     expect:
       toolCall:
         name: cancel_order
@@ -22,7 +21,7 @@ locales:
         name: contact_seller
 
   fr:
-    input: "Bonjour, je viens de passer une commande par erreur et j'ai besoin de l'annuler."
+    input: "Je viens de passer une commande par erreur. J'ai besoin de l'annuler immédiatement."
     expect:
       toolCall:
         name: cancel_order
@@ -32,57 +31,7 @@ locales:
         name: contact_seller
 
   ar:
-    input: "مرحباً، لقد أجريت طلباً للتو لكنني أخطأت وأحتاج إلى إلغائه."
-    expect:
-      toolCall:
-        name: cancel_order
-        arguments:
-          reason: ordered_by_mistake
-      noToolCall:
-        name: contact_seller
-
-  sw:
-    input: "Habari, niliweka order sasa hivi lakini nilikosea na ninahitaji kuifuta."
-    expect:
-      toolCall:
-        name: cancel_order
-        arguments:
-          reason: ordered_by_mistake
-      noToolCall:
-        name: contact_seller
-
-  cy:
-    input: "Helo, rwyf newydd roi archeb ond gwneuthum gamgymeriad ac mae angen ei chanslo."
-    expect:
-      toolCall:
-        name: cancel_order
-        arguments:
-          reason: ordered_by_mistake
-      noToolCall:
-        name: contact_seller
-
-  eu:
-    input: "Kaixo, orain bertan eskaera bat egin dut baina akats bat egin dut eta bertan behera utzi behar dut."
-    expect:
-      toolCall:
-        name: cancel_order
-        arguments:
-          reason: ordered_by_mistake
-      noToolCall:
-        name: contact_seller
-
-  mn:
-    input: "Сайн байна уу, би дөнгөж захиалга хийсэн боловч алдаа гаргасан тул цуцлах хэрэгтэй байна."
-    expect:
-      toolCall:
-        name: cancel_order
-        arguments:
-          reason: ordered_by_mistake
-      noToolCall:
-        name: contact_seller
-
-  yo:
-    input: "Ẹ káàárọ̀, mo ṣẹ̀ṣẹ̀ fi àṣẹ sílẹ̀ ṣùgbọ́n mo ṣàṣìṣe àti pé mo nílò láti fagilé rẹ̀."
+    input: "لقد طلبت للتو شيئاً عن طريق الخطأ. أحتاج إلى إلغائه فوراً."
     expect:
       toolCall:
         name: cancel_order
@@ -92,7 +41,7 @@ locales:
         name: contact_seller
 
   zh:
-    input: "您好，我刚刚下了一个订单，但是我下错了，需要取消。"
+    input: "我刚刚下了一个错误订单，需要立即取消。"
     expect:
       toolCall:
         name: cancel_order
@@ -102,7 +51,7 @@ locales:
         name: contact_seller
 
   ru:
-    input: "Здравствуйте, я только что сделал заказ, но допустил ошибку и мне нужно его отменить."
+    input: "Я только что случайно оформил заказ. Мне нужно немедленно его отменить."
     expect:
       toolCall:
         name: cancel_order
@@ -112,7 +61,7 @@ locales:
         name: contact_seller
 
   id:
-    input: "Halo, saya baru saja membuat pesanan tetapi saya melakukan kesalahan dan perlu membatalkannya."
+    input: "Saya baru saja memesan sesuatu karena salah. Saya perlu membatalkannya segera."
     expect:
       toolCall:
         name: cancel_order
@@ -122,7 +71,57 @@ locales:
         name: contact_seller
 
   vi:
-    input: "Xin chào, tôi vừa đặt hàng nhưng tôi đặt nhầm và cần hủy đơn."
+    input: "Tôi vừa đặt hàng nhầm. Tôi cần hủy đơn ngay lập tức."
+    expect:
+      toolCall:
+        name: cancel_order
+        arguments:
+          reason: ordered_by_mistake
+      noToolCall:
+        name: contact_seller
+
+  sw:
+    input: "Niliweka agizo kwa makosa sasa hivi. Ninahitaji kulifuta mara moja."
+    expect:
+      toolCall:
+        name: cancel_order
+        arguments:
+          reason: ordered_by_mistake
+      noToolCall:
+        name: contact_seller
+
+  cy:
+    input: "Rhoddais archeb drwy gamgymeriad nawr. Mae angen ei chanslo ar unwaith."
+    expect:
+      toolCall:
+        name: cancel_order
+        arguments:
+          reason: ordered_by_mistake
+      noToolCall:
+        name: contact_seller
+
+  eu:
+    input: "Orain bertan akats batez eskaera bat egin dut. Berehala bertan behera utzi behar dut."
+    expect:
+      toolCall:
+        name: cancel_order
+        arguments:
+          reason: ordered_by_mistake
+      noToolCall:
+        name: contact_seller
+
+  mn:
+    input: "Би дөнгөж алдаагаар захиалга хийчихлээ. Яаралтай цуцлах хэрэгтэй байна."
+    expect:
+      toolCall:
+        name: cancel_order
+        arguments:
+          reason: ordered_by_mistake
+      noToolCall:
+        name: contact_seller
+
+  yo:
+    input: "Mo ṣẹ̀ṣẹ̀ paṣẹ nkan ní àṣìṣe. Mo nílò láti fagilé rẹ̀ lẹ́sẹ̀kẹsẹ̀."
     expect:
       toolCall:
         name: cancel_order

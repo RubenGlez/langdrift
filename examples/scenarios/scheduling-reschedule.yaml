@@ -1,18 +1,18 @@
 id: scheduling_reschedule
-agent: generic
+agent: scheduling
 
 # Domain: scheduling
-# Intent: customer can't make their appointment and wants to move it to another time
+# Intent: customer can't make their appointment and wants to move it to a specific new day
 # Expected tool: reschedule_appointment
 # Confusion risk: cancel_appointment (can't make it, could be read as wanting to cancel)
 #                 book_new_appointment (needs a new time, could be read as new booking)
 #
-# All inputs express the same intent at the same level of directness.
-# Natural phrasing in each language — not literal translations.
+# Without a stated reason and target day the model asks back instead of acting.
+# Baseline English confirmed 3/3 before translation. Natural phrasing in each language.
 
 locales:
   en:
-    input: "Hi, I have an appointment this Friday but something came up and I need to move it to next week."
+    input: "I need to reschedule my Friday appointment to next Monday, something came up."
     expect:
       toolCall:
         name: reschedule_appointment
@@ -20,7 +20,7 @@ locales:
         name: cancel_appointment
 
   fr:
-    input: "Bonjour, j'ai un rendez-vous vendredi mais quelque chose s'est produit et je dois le déplacer à la semaine prochaine."
+    input: "Je dois reporter mon rendez-vous de vendredi à lundi prochain, un imprévu est survenu."
     expect:
       toolCall:
         name: reschedule_appointment
@@ -28,47 +28,7 @@ locales:
         name: cancel_appointment
 
   ar:
-    input: "مرحباً، لديّ موعد يوم الجمعة لكن طرأ أمر ما وأحتاج إلى تأجيله إلى الأسبوع القادم."
-    expect:
-      toolCall:
-        name: reschedule_appointment
-      noToolCall:
-        name: cancel_appointment
-
-  sw:
-    input: "Habari, nina miadi Ijumaa lakini kitu kimetokea na ninahitaji kuihamisha wiki ijayo."
-    expect:
-      toolCall:
-        name: reschedule_appointment
-      noToolCall:
-        name: cancel_appointment
-
-  cy:
-    input: "Helo, mae gen i apwyntiad ddydd Gwener ond mae rhywbeth wedi codi ac mae angen ei symud i'r wythnos nesaf."
-    expect:
-      toolCall:
-        name: reschedule_appointment
-      noToolCall:
-        name: cancel_appointment
-
-  eu:
-    input: "Kaixo, ostiralerako hitzordua daukat baina zerbait gertatu da eta datorren asterako mugitu behar dut."
-    expect:
-      toolCall:
-        name: reschedule_appointment
-      noToolCall:
-        name: cancel_appointment
-
-  mn:
-    input: "Сайн байна уу, би энэ баасан гарагт цаг авсан боловч ямар нэг зүйл гарч ирсэн тул дараа долоо хоногт шилжүүлэх хэрэгтэй байна."
-    expect:
-      toolCall:
-        name: reschedule_appointment
-      noToolCall:
-        name: cancel_appointment
-
-  yo:
-    input: "Ẹ káàárọ̀, mo ní ìpàdé ní ọjọ́ Jimọ̀ ṣùgbọ́n nǹkan kan ṣẹlẹ̀ àti pé mo nílò láti gbépadà rẹ̀ sí ọ̀sẹ̀ tó ń bọ̀."
+    input: "أحتاج إلى تأجيل موعد الجمعة إلى الاثنين القادم، فقد طرأ أمر طارئ."
     expect:
       toolCall:
         name: reschedule_appointment
@@ -76,7 +36,7 @@ locales:
         name: cancel_appointment
 
   zh:
-    input: "您好，我本周五有一个预约，但临时有事，需要改到下周。"
+    input: "我需要把周五的预约改到下周一，临时有事情。"
     expect:
       toolCall:
         name: reschedule_appointment
@@ -84,7 +44,7 @@ locales:
         name: cancel_appointment
 
   ru:
-    input: "Здравствуйте, у меня запись в пятницу, но возникли обстоятельства, и мне нужно перенести её на следующую неделю."
+    input: "Мне нужно перенести запись с пятницы на следующий понедельник — возникли непредвиденные обстоятельства."
     expect:
       toolCall:
         name: reschedule_appointment
@@ -92,7 +52,7 @@ locales:
         name: cancel_appointment
 
   id:
-    input: "Halo, saya punya janji temu hari Jumat tapi ada sesuatu yang terjadi dan saya perlu memindahkannya ke minggu depan."
+    input: "Saya perlu memindahkan janji temu hari Jumat ke Senin depan, ada sesuatu yang tiba-tiba muncul."
     expect:
       toolCall:
         name: reschedule_appointment
@@ -100,7 +60,47 @@ locales:
         name: cancel_appointment
 
   vi:
-    input: "Xin chào, tôi có lịch hẹn vào thứ Sáu nhưng có việc bận và tôi cần dời sang tuần sau."
+    input: "Tôi cần dời lịch hẹn thứ Sáu sang thứ Hai tuần tới vì có việc đột xuất."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  sw:
+    input: "Ninahitaji kuhamisha miadi yangu ya Ijumaa hadi Jumatatu ijayo, kuna kitu kilitokea."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  cy:
+    input: "Mae angen symud fy apwyntiad dydd Gwener i ddydd Llun nesaf — cododd rhywbeth."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  eu:
+    input: "Ostiralarako hitzordua datorren astelehenerako mugitu behar dut, zerbait gertatu baita."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  mn:
+    input: "Баасан гарагийн цагийг дараа долоо хоногийн Даваа гараг руу шилжүүлэх хэрэгтэй байна, гэнэтийн зүйл гарлаа."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  yo:
+    input: "Mo nílò láti yí ìpàdé ọjọ́ Jimọ̀ mi padà sí ọjọ́ Àìkú ọ̀sẹ̀ tó ń bọ̀, nǹkan kan ṣẹlẹ̀."
     expect:
       toolCall:
         name: reschedule_appointment

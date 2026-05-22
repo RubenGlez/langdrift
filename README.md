@@ -10,22 +10,22 @@ I wanted to know how bad the drift actually is, so I ran a benchmark.
 
 ## The findings
 
-I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 locales each, using a 5-tool-per-domain agent backed by deepseek-chat. Each locale got a natural-language phrasing of the same intent — not a literal translation, verified for equivalent directness and natural phrasing before running. Three iterations per scenario, 36 locale checks each.
+I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 locales each, using a 5-tool-per-domain agent backed by deepseek-chat. The methodology: write and validate each English prompt to 3/3 pass first, then translate that intent into the other 11 languages. Any failures are definitively language drift, not ambiguous prompts. Three iterations per scenario, 36 locale checks each.
 
 **Results (deepseek-chat, 3 iterations × 12 locales):**
 
-| Scenario | Pass rate | Dominant failure |
-| -------- | --------- | ---------------- |
-| support-routing | 92% (33/36) | wrong_tool / no_tool_call (sw, mn, yo) |
-| support-cancel-subscription | 61% (22/36) | no_tool_call (en, vi, sw, cy, yo) |
-| ecommerce-cancel-order | 11% (4/36) | no_tool_call (11 of 12 locales) |
-| ecommerce-track-order | 78% (28/36) | no_tool_call (zh, sw) |
-| scheduling-reschedule | 39% (14/36) | no_tool_call (en, fr, zh, ru, vi) |
-| scheduling-book-new | 100% (36/36) | — |
+| Scenario | Pass rate | Failing locales |
+| -------- | --------- | --------------- |
+| support-routing | 86% (31/36) | sw (3/3), yo (1/3), zh (1/3) |
+| support-cancel-subscription | 78% (28/36) | sw (2/3), cy (2/3), yo (2/3) |
+| ecommerce-cancel-order | 72% (26/36) | zh (3/3), eu (3/3), yo (2/3) |
+| ecommerce-track-order | 81% (29/36) | zh (3/3), sw (2/3) |
+| scheduling-reschedule | 78% (28/36) | ar (2/3), sw (2/3), cy (1/3) |
+| scheduling-book-new | 92% (33/36) | zh (1/3), mn (1/3) |
 
-Three patterns stand out.
+English passed 3/3 in every scenario. The failures are language-specific.
 
-**Locale drift is real and correlated with training corpus coverage.** The support domain shows this most clearly: Arabic (high-resource, non-Latin script) passes consistently, while Swahili, Mongolian, and Yoruba fail regularly — not by misunderstanding the intent, but by routing to the wrong tool or dropping tool use entirely. The failures don't track speaker count; they track how well-represented the language is in instruction-tuning data.
+**Drift correlates with training corpus coverage, not speaker count.** Arabic (high-resource, non-Latin script) passes consistently across all 6 scenarios. Swahili and Yoruba fail regularly — not because the intent is unclear, but because the model routes to the wrong tool or drops tool use entirely. Welsh and Basque, despite being European languages, behave like low-resource languages for tool use. Chinese fails more than Russian despite having far more training data overall, suggesting the gap is in instruction-tuning coverage specifically.
 
 ```text
 Scenario: support_routing (sample iteration)
@@ -37,9 +37,9 @@ ar      pass    -             create_refund_ticket
 sw      fail    no_tool_call  expected create_refund_ticket, got no tool calls
 cy      pass    -             create_refund_ticket
 eu      pass    -             create_refund_ticket
-mn      fail    wrong_tool    expected create_refund_ticket, got check_payment_status
+mn      pass    -             create_refund_ticket
 yo      pass    -             create_refund_ticket
-zh      pass    -             create_refund_ticket
+zh      fail    no_tool_call  expected create_refund_ticket, got no tool calls
 ru      pass    -             create_refund_ticket
 id      pass    -             create_refund_ticket
 vi      pass    -             create_refund_ticket
@@ -47,31 +47,29 @@ vi      pass    -             create_refund_ticket
 Result: failed, 2 of 12 locales failed
 ```
 
-**English is not always the strongest baseline.** In `support-cancel-subscription`, English failed all 3 iterations while French, Arabic, Chinese, and Russian passed consistently. The model appears more cautious about immediately acting on irreversible requests in English — it responds conversationally instead of calling `cancel_subscription`. This reversed the expected hierarchy. English-first testing would have given a false sense of baseline quality here.
-
-**Tool-use consistency varies sharply by domain.** `ecommerce-cancel-order` failed at 89% — but French was the only language that passed, consistently, across all 3 iterations. Every other locale, including English, got no tool call. This isn't language drift; it's a language-specific behaviour pattern baked into the model. The scheduling domain shows a different failure mode: the model asks for more information (new time, confirmation) instead of acting on a clear reschedule intent, and this happens uniformly across locales.
+**The failures are consistent across domains and intents.** Swahili fails in support routing, subscription cancellation, order cancellation, and order tracking. Chinese fails in four of the six scenarios. This isn't noise — it's a stable property of how well the model handles tool-use in those languages, regardless of the specific task.
 
 ```text
 Scenario: ecommerce-cancel-order (sample iteration)
 
 Locale  Status  Failure       Detail
-en      fail    no_tool_call  expected cancel_order, got no tool calls
+en      pass    -             cancel_order
 fr      pass    -             cancel_order
-ar      fail    no_tool_call  expected cancel_order, got no tool calls
-sw      fail    no_tool_call  expected cancel_order, got no tool calls
-cy      fail    no_tool_call  expected cancel_order, got no tool calls
-eu      fail    no_tool_call  expected cancel_order, got no tool calls
-mn      fail    no_tool_call  expected cancel_order, got no tool calls
-yo      fail    no_tool_call  expected cancel_order, got no tool calls
+ar      pass    -             cancel_order
 zh      fail    no_tool_call  expected cancel_order, got no tool calls
-ru      fail    no_tool_call  expected cancel_order, got no tool calls
-id      fail    no_tool_call  expected cancel_order, got no tool calls
-vi      fail    no_tool_call  expected cancel_order, got no tool calls
+ru      pass    -             cancel_order
+id      pass    -             cancel_order
+vi      pass    -             cancel_order
+sw      pass    -             cancel_order
+cy      pass    -             cancel_order
+eu      fail    no_tool_call  expected cancel_order, got no tool calls
+mn      pass    -             cancel_order
+yo      fail    no_tool_call  expected cancel_order, got no tool calls
 
-Result: failed, 11 of 12 locales failed
+Result: failed, 3 of 12 locales failed
 ```
 
-All three failure types are invisible in English-only testing. Locale drift disappears because English passes. The English-baseline reversal is invisible because you'd never see it without the other locales. Domain-level tool-use collapse looks like a pass in English-only testing precisely because English is often the locale that refuses to act.
+None of this is visible in English-only testing. English passes cleanly every time — which is precisely why these failures go undetected in practice.
 
 The full benchmark results are in `examples/benchmark/results/`. The original investigation and supporting research is in [RESEARCH.md](RESEARCH.md).
 

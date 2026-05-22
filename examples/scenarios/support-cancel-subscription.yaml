@@ -2,17 +2,17 @@ id: support_cancel_subscription
 agent: support
 
 # Domain: support
-# Intent: customer explicitly wants to cancel their subscription
+# Intent: customer explicitly wants to cancel their subscription, with a reason
 # Expected tool: cancel_subscription
 # Confusion risk: request_account_review (model hedges, wants to investigate first)
 #                 escalate_to_human (model defers instead of acting)
 #
-# All inputs express the same explicit intent at the same level of directness.
-# Natural phrasing in each language — not literal translations.
+# cancel_subscription requires a reason — without one the model asks back instead of acting.
+# Baseline English confirmed 3/3 before translation. Natural phrasing in each language.
 
 locales:
   en:
-    input: "I've decided I don't need this anymore. Please cancel my subscription."
+    input: "Please cancel my subscription. I'm not using it anymore."
     expect:
       toolCall:
         name: cancel_subscription
@@ -20,7 +20,7 @@ locales:
         name: escalate_to_human
 
   fr:
-    input: "J'ai décidé que je n'en ai plus besoin. Veuillez annuler mon abonnement."
+    input: "Veuillez annuler mon abonnement. Je ne l'utilise plus."
     expect:
       toolCall:
         name: cancel_subscription
@@ -28,7 +28,7 @@ locales:
         name: escalate_to_human
 
   ar:
-    input: "لقد قررت أنني لم أعد بحاجة إلى هذا. يرجى إلغاء اشتراكي."
+    input: "يرجى إلغاء اشتراكي. لم أعد أستخدمه."
     expect:
       toolCall:
         name: cancel_subscription
@@ -36,7 +36,7 @@ locales:
         name: escalate_to_human
 
   zh:
-    input: "我决定不再需要这个了。请取消我的订阅。"
+    input: "请取消我的订阅，我已经不再使用了。"
     expect:
       toolCall:
         name: cancel_subscription
@@ -44,7 +44,7 @@ locales:
         name: escalate_to_human
 
   ru:
-    input: "Я решил, что больше не нуждаюсь в этом. Пожалуйста, отмените мою подписку."
+    input: "Пожалуйста, отмените мою подписку. Я больше ею не пользуюсь."
     expect:
       toolCall:
         name: cancel_subscription
@@ -52,7 +52,7 @@ locales:
         name: escalate_to_human
 
   id:
-    input: "Saya memutuskan sudah tidak memerlukannya lagi. Tolong batalkan langganan saya."
+    input: "Tolong batalkan langganan saya. Saya sudah tidak menggunakannya lagi."
     expect:
       toolCall:
         name: cancel_subscription
@@ -60,7 +60,7 @@ locales:
         name: escalate_to_human
 
   vi:
-    input: "Tôi đã quyết định không cần nó nữa. Vui lòng hủy gói đăng ký của tôi."
+    input: "Vui lòng hủy gói đăng ký của tôi. Tôi không còn sử dụng nữa."
     expect:
       toolCall:
         name: cancel_subscription
@@ -68,7 +68,7 @@ locales:
         name: escalate_to_human
 
   sw:
-    input: "Nimeamua sihitaji hii tena. Tafadhali futa usajili wangu."
+    input: "Tafadhali futa usajili wangu. Sistumii tena."
     expect:
       toolCall:
         name: cancel_subscription
@@ -76,7 +76,7 @@ locales:
         name: escalate_to_human
 
   cy:
-    input: "Rwyf wedi penderfynu nad oes ei angen arnaf mwyach. Plîs canslwch fy nhanysgrifiad."
+    input: "Plîs canslwch fy nhanysgrifiad. Dydw i ddim yn ei ddefnyddio mwyach."
     expect:
       toolCall:
         name: cancel_subscription
@@ -84,7 +84,7 @@ locales:
         name: escalate_to_human
 
   eu:
-    input: "Erabaki dut ez dudala gehiago behar. Mesedez, baja eman iezadazu."
+    input: "Mesedez, baja eman iezadazu. Ez dut gehiago erabiltzen."
     expect:
       toolCall:
         name: cancel_subscription
@@ -92,7 +92,7 @@ locales:
         name: escalate_to_human
 
   mn:
-    input: "Би энэ нь надад больохгүй гэж шийдсэн. Миний захиалгыг цуцлана уу."
+    input: "Миний захиалгыг цуцлана уу. Би больдоо хэрэглэхгүй болсон."
     expect:
       toolCall:
         name: cancel_subscription
@@ -100,7 +100,7 @@ locales:
         name: escalate_to_human
 
   yo:
-    input: "Mo ti pinnu pé mi ò nílò rẹ̀ mọ́. Jọ̀wọ́ fagilé ìforúkọsílẹ̀ mi."
+    input: "Jọ̀wọ́ fagilé ìforúkọsílẹ̀ mi. Mò ń lo ó mọ́."
     expect:
       toolCall:
         name: cancel_subscription

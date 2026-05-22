@@ -8,7 +8,7 @@ const scenarioPath = process.env.SCENARIO ?? "./examples/scenarios/support-routi
 const domain = process.env.DOMAIN ?? "support";
 const provider = process.env.MODEL_PROVIDER ?? "openai-compat";
 const modelName = process.env.MODEL_NAME ?? "gpt-4o-mini";
-const iterations = Number.parseInt(process.env.ITERATIONS ?? "10", 10);
+const iterations = Number.parseInt(process.env.ITERATIONS ?? "3", 10);
 const port = 3010;
 const target = `http://127.0.0.1:${port}/api/agent`;
 

@@ -8,7 +8,7 @@ agent: ecommerce
 #                 process_refund (model infers non-receipt as a refund trigger)
 #
 # All inputs express the same intent at the same level of directness.
-# Natural phrasing in each language — not literal translations.
+# Natural phrasing in each language, not literal translations.
 
 locales:
   en:

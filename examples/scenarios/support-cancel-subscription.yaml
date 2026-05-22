@@ -7,7 +7,7 @@ agent: support
 # Confusion risk: request_account_review (model hedges, wants to investigate first)
 #                 escalate_to_human (model defers instead of acting)
 #
-# cancel_subscription requires a reason — without one the model asks back instead of acting.
+# cancel_subscription requires a reason; without one the model asks back instead of acting.
 # Baseline English confirmed 3/3 before translation. Natural phrasing in each language.
 
 locales:

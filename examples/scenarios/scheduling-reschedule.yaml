@@ -44,7 +44,7 @@ locales:
         name: cancel_appointment
 
   ru:
-    input: "Мне нужно перенести запись с пятницы на следующий понедельник — возникли непредвиденные обстоятельства."
+    input: "Мне нужно перенести запись с пятницы на следующий понедельник, возникли непредвиденные обстоятельства."
     expect:
       toolCall:
         name: reschedule_appointment
@@ -76,7 +76,7 @@ locales:
         name: cancel_appointment
 
   cy:
-    input: "Mae angen symud fy apwyntiad dydd Gwener i ddydd Llun nesaf — cododd rhywbeth."
+    input: "Mae angen symud fy apwyntiad dydd Gwener i ddydd Llun nesaf; cododd rhywbeth."
     expect:
       toolCall:
         name: reschedule_appointment

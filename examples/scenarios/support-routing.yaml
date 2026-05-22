@@ -7,7 +7,7 @@ agent: generic
 # Confusion risk: check_payment_status (saw "charge" but missed "twice")
 #
 # All inputs express the same intent at the same level of directness.
-# Natural phrasing in each language — not literal translations.
+# Natural phrasing in each language, not literal translations.
 
 locales:
   en:

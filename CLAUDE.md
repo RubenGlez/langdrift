@@ -21,7 +21,7 @@ OPENAI_API_KEY=... pnpm agent
 OPENAI_API_KEY=... pnpm benchmark:support
 ```
 
-TypeScript is not compiled — Node runs `.ts` files directly (Node >= 24 with native strip-types). There is no build step.
+TypeScript is not compiled; Node runs `.ts` files directly (Node >= 24 with native strip-types). There is no build step.
 
 ## Architecture
 
@@ -39,19 +39,19 @@ CLI (cli.ts)
 ```
 
 **Key types** (`src/types.ts`):
-- `Scenario` — loaded from YAML; contains `id`, `agent`, and per-locale variants
-- `ScenarioLocale` — one locale's `input` string plus `expect` assertions (required tool call, optional forbidden tool call, optional argument checks)
-- `TargetResponse` — what the HTTP agent returns: `text`, `toolCalls[]`, `structured`
-- `LocaleResult` — per-locale pass/fail with a detail string
-- `RunResult` — full run output consumed by the reporter
+- `Scenario`: loaded from YAML; contains `id`, `agent`, and per-locale variants
+- `ScenarioLocale`: one locale's `input` string plus `expect` assertions (required tool call, optional forbidden tool call, optional argument checks)
+- `TargetResponse`: what the HTTP agent returns: `text`, `toolCalls[]`, `structured`
+- `LocaleResult`: per-locale pass/fail with a detail string
+- `RunResult`: full run output consumed by the reporter
 
-**HTTP target contract** — LangDrift POSTs `{ locale, input, scenarioId }` to the target URL. The agent must respond with `{ text, toolCalls, structured }`. Missing fields normalize to `""`, `[]`, `null`.
+**HTTP target contract:** LangDrift POSTs `{ locale, input, scenarioId }` to the target URL. The agent must respond with `{ text, toolCalls, structured }`. Missing fields normalize to `""`, `[]`, `null`.
 
-**Assertions** are deterministic only (no LLM-as-judge). Checks: required tool call name, required shallow argument key/value pairs, forbidden tool call name. Argument checks are shallow — extra keys in the actual response are ignored.
+**Assertions** are deterministic only (no LLM-as-judge). Checks: required tool call name, required shallow argument key/value pairs, forbidden tool call name. Argument checks are shallow; extra keys in the actual response are ignored.
 
 **YAML parser** (`scenario.ts`) is a hand-rolled indent-aware tokenizer with no external dependencies. The project has zero runtime dependencies.
 
 **Examples** (`examples/`) demonstrate a real LLM-backed agent:
-- `agent/` — model-agnostic agent supporting OpenAI, Anthropic, and any OpenAI-compatible API
+- `agent/`: model-agnostic agent supporting OpenAI, Anthropic, and any OpenAI-compatible API
 
-**Scenarios** (`examples/scenarios/*.yaml`) — one scenario per file; each locale gets its own `input` and `expect` block.
+**Scenarios** (`examples/scenarios/*.yaml`): one scenario per file; each locale gets its own `input` and `expect` block.

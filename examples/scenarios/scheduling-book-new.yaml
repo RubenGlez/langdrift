@@ -9,7 +9,7 @@ agent: scheduling
 #
 # The real routing challenge here is new-customer vs. existing-customer disambiguation.
 # check_availability is the correct first step when a preferred time is stated but not yet confirmed.
-# Natural phrasing in each language — not literal translations.
+# Natural phrasing in each language, not literal translations.
 
 locales:
   en:

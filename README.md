@@ -98,6 +98,24 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 
 ## Quick start
 
+**Try the no-key demo:**
+
+In one terminal:
+
+```bash
+pnpm fake-agent
+```
+
+In another terminal:
+
+```bash
+node ./src/cli.ts run ./examples/scenarios/support-routing.yaml --target http://127.0.0.1:3011/api/agent
+```
+
+The fake agent intentionally drops tool calls for a couple of locales, so the run shows the core LangDrift failure mode without calling any model provider.
+
+Expected result: the run exits non-zero and reports `2 of 12 locales failed`.
+
 **1. Create a starter scenario:**
 
 ```bash
@@ -148,7 +166,12 @@ node ./src/cli.ts run ./my-scenario.yaml --target http://127.0.0.1:3010/api/agen
 
 ## Example agent
 
-The repo includes a model-agnostic agent you can run locally. It defaults to OpenAI but supports any OpenAI-compatible API or Anthropic.
+The repo includes two local agents:
+
+- `pnpm fake-agent`: deterministic demo agent, no API key required.
+- `pnpm agent`: model-backed agent for OpenAI, Anthropic, or any OpenAI-compatible API.
+
+The model-backed agent defaults to OpenAI but supports any OpenAI-compatible API or Anthropic.
 
 ```bash
 # OpenAI (default)

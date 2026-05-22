@@ -21,6 +21,9 @@ node --test tests/scenario.test.ts
 # Start the example agent
 OPENAI_API_KEY=... pnpm agent
 
+# Start the no-key fake demo agent
+pnpm fake-agent
+
 # Run a benchmark
 OPENAI_API_KEY=... pnpm benchmark:support
 ```
@@ -57,5 +60,6 @@ CLI (cli.ts)
 
 **Examples** (`examples/`) demonstrate a real LLM-backed agent:
 - `agent/`: model-agnostic agent supporting OpenAI, Anthropic, and any OpenAI-compatible API
+- `fake-agent/`: deterministic local agent for no-key demos and CLI smoke tests
 
 **Scenarios** (`examples/scenarios/*.yaml`): one scenario per file; each locale gets its own `input` and `expect` block.

@@ -90,3 +90,43 @@ locales:
           reason: ordered_by_mistake
       noToolCall:
         name: contact_seller
+
+  zh:
+    input: "您好，我刚刚下了一个订单，但是我下错了，需要取消。"
+    expect:
+      toolCall:
+        name: cancel_order
+        arguments:
+          reason: ordered_by_mistake
+      noToolCall:
+        name: contact_seller
+
+  ru:
+    input: "Здравствуйте, я только что сделал заказ, но допустил ошибку и мне нужно его отменить."
+    expect:
+      toolCall:
+        name: cancel_order
+        arguments:
+          reason: ordered_by_mistake
+      noToolCall:
+        name: contact_seller
+
+  id:
+    input: "Halo, saya baru saja membuat pesanan tetapi saya melakukan kesalahan dan perlu membatalkannya."
+    expect:
+      toolCall:
+        name: cancel_order
+        arguments:
+          reason: ordered_by_mistake
+      noToolCall:
+        name: contact_seller
+
+  vi:
+    input: "Xin chào, tôi vừa đặt hàng nhưng tôi đặt nhầm và cần hủy đơn."
+    expect:
+      toolCall:
+        name: cancel_order
+        arguments:
+          reason: ordered_by_mistake
+      noToolCall:
+        name: contact_seller

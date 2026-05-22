@@ -8,31 +8,72 @@ AI localization is moving from translated strings to localized behavior. When yo
 
 I wanted to know how bad the drift actually is, so I ran a benchmark.
 
-## The finding
+## The findings
 
-I ran a realistic support-routing scenario across 8 languages using a 5-tool agent. Each locale got an equivalent, natural-language phrasing of the same intent — not a literal translation. Three iterations, checking whether the agent called the right tool every time.
+I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 locales each, using a 5-tool-per-domain agent backed by deepseek-chat. Each locale got a natural-language phrasing of the same intent — not a literal translation, verified for equivalent directness and natural phrasing before running. Three iterations per scenario, 36 locale checks each.
+
+**Results (deepseek-chat, 3 iterations × 12 locales):**
+
+| Scenario | Pass rate | Dominant failure |
+| -------- | --------- | ---------------- |
+| support-routing | 92% (33/36) | wrong_tool / no_tool_call (sw, mn, yo) |
+| support-cancel-subscription | 61% (22/36) | no_tool_call (en, vi, sw, cy, yo) |
+| ecommerce-cancel-order | 11% (4/36) | no_tool_call (11 of 12 locales) |
+| ecommerce-track-order | 78% (28/36) | no_tool_call (zh, sw) |
+| scheduling-reschedule | 39% (14/36) | no_tool_call (en, fr, zh, ru, vi) |
+| scheduling-book-new | 100% (36/36) | — |
+
+Three patterns stand out.
+
+**Locale drift is real and correlated with training corpus coverage.** The support domain shows this most clearly: Arabic (high-resource, non-Latin script) passes consistently, while Swahili, Mongolian, and Yoruba fail regularly — not by misunderstanding the intent, but by routing to the wrong tool or dropping tool use entirely. The failures don't track speaker count; they track how well-represented the language is in instruction-tuning data.
 
 ```text
-Scenario: support_routing
+Scenario: support_routing (sample iteration)
 
-Locale  Status  Failure      Detail
-en      pass    -            create_refund_ticket
-fr      pass    -            create_refund_ticket
-ar      pass    -            create_refund_ticket
-sw      fail    wrong_tool   expected create_refund_ticket, got check_payment_status
-cy      pass    -            create_refund_ticket
-yo      fail    wrong_tool   expected create_refund_ticket, got no tool calls
-eu      pass    -            create_refund_ticket
-mn      fail    wrong_tool   expected create_refund_ticket, got check_payment_status
+Locale  Status  Failure       Detail
+en      pass    -             create_refund_ticket
+fr      pass    -             create_refund_ticket
+ar      pass    -             create_refund_ticket
+sw      fail    no_tool_call  expected create_refund_ticket, got no tool calls
+cy      pass    -             create_refund_ticket
+eu      pass    -             create_refund_ticket
+mn      fail    wrong_tool    expected create_refund_ticket, got check_payment_status
+yo      pass    -             create_refund_ticket
+zh      pass    -             create_refund_ticket
+ru      pass    -             create_refund_ticket
+id      pass    -             create_refund_ticket
+vi      pass    -             create_refund_ticket
 
-Result: failed, 3 of 8 locales failed
+Result: failed, 2 of 12 locales failed
 ```
 
-Swahili and Mongolian routed to the wrong tool every time. The pattern correlated with linguistic distance from the training corpus, not speaker count — Arabic passed, Swahili failed. The agent wasn't misunderstanding the user; it was confidently doing the wrong thing.
+**English is not always the strongest baseline.** In `support-cancel-subscription`, English failed all 3 iterations while French, Arabic, Chinese, and Russian passed consistently. The model appears more cautious about immediately acting on irreversible requests in English — it responds conversationally instead of calling `cancel_subscription`. This reversed the expected hierarchy. English-first testing would have given a false sense of baseline quality here.
 
-This is the kind of failure that's invisible in English-first testing.
+**Tool-use consistency varies sharply by domain.** `ecommerce-cancel-order` failed at 89% — but French was the only language that passed, consistently, across all 3 iterations. Every other locale, including English, got no tool call. This isn't language drift; it's a language-specific behaviour pattern baked into the model. The scheduling domain shows a different failure mode: the model asks for more information (new time, confirmation) instead of acting on a clear reschedule intent, and this happens uniformly across locales.
 
-The full investigation and supporting research is in [RESEARCH.md](RESEARCH.md).
+```text
+Scenario: ecommerce-cancel-order (sample iteration)
+
+Locale  Status  Failure       Detail
+en      fail    no_tool_call  expected cancel_order, got no tool calls
+fr      pass    -             cancel_order
+ar      fail    no_tool_call  expected cancel_order, got no tool calls
+sw      fail    no_tool_call  expected cancel_order, got no tool calls
+cy      fail    no_tool_call  expected cancel_order, got no tool calls
+eu      fail    no_tool_call  expected cancel_order, got no tool calls
+mn      fail    no_tool_call  expected cancel_order, got no tool calls
+yo      fail    no_tool_call  expected cancel_order, got no tool calls
+zh      fail    no_tool_call  expected cancel_order, got no tool calls
+ru      fail    no_tool_call  expected cancel_order, got no tool calls
+id      fail    no_tool_call  expected cancel_order, got no tool calls
+vi      fail    no_tool_call  expected cancel_order, got no tool calls
+
+Result: failed, 11 of 12 locales failed
+```
+
+All three failure types are invisible in English-only testing. Locale drift disappears because English passes. The English-baseline reversal is invisible because you'd never see it without the other locales. Domain-level tool-use collapse looks like a pass in English-only testing precisely because English is often the locale that refuses to act.
+
+The full benchmark results are in `examples/benchmark/results/`. The original investigation and supporting research is in [RESEARCH.md](RESEARCH.md).
 
 ## What LangDrift does
 
@@ -115,13 +156,16 @@ node ./src/cli.ts run ./examples/scenarios/support-routing.yaml --target http://
 
 ## Benchmark
 
-Run multi-iteration benchmarks across the three included scenarios (8 locales each). Results are written to `examples/benchmark/results/<scenario>.md`.
+Run multi-iteration benchmarks across the six included scenarios (12 locales each). Results are written to `examples/benchmark/results/<scenario>.md`.
 
 ```bash
 # OpenAI (default)
 OPENAI_API_KEY=... pnpm benchmark:support
 OPENAI_API_KEY=... pnpm benchmark:ecommerce
 OPENAI_API_KEY=... pnpm benchmark:scheduling
+OPENAI_API_KEY=... pnpm benchmark:support-cancel
+OPENAI_API_KEY=... pnpm benchmark:ecommerce-track
+OPENAI_API_KEY=... pnpm benchmark:scheduling-book
 
 # Anthropic
 ANTHROPIC_API_KEY=... MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:support
@@ -132,8 +176,11 @@ MODEL_API_KEY=... MODEL_API_URL=https://api.deepseek.com/chat/completions MODEL_
 
 **Included scenarios:**
 - `support-routing` — duplicate charge, expected: `create_refund_ticket(reason=duplicate_charge)`
+- `support-cancel-subscription` — explicit cancellation, expected: `cancel_subscription`
 - `ecommerce-cancel-order` — accidental order, expected: `cancel_order(reason=ordered_by_mistake)`
-- `scheduling-reschedule` — reschedule appointment, expected: `reschedule_appointment`
+- `ecommerce-track-order` — package tracking, expected: `check_order_status`
+- `scheduling-reschedule` — move existing appointment, expected: `reschedule_appointment`
+- `scheduling-book-new` — new customer with time preference, expected: `check_availability`
 
 ## Architecture
 

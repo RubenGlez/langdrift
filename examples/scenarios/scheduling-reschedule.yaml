@@ -74,3 +74,35 @@ locales:
         name: reschedule_appointment
       noToolCall:
         name: cancel_appointment
+
+  zh:
+    input: "您好，我本周五有一个预约，但临时有事，需要改到下周。"
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  ru:
+    input: "Здравствуйте, у меня запись в пятницу, но возникли обстоятельства, и мне нужно перенести её на следующую неделю."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  id:
+    input: "Halo, saya punya janji temu hari Jumat tapi ada sesuatu yang terjadi dan saya perlu memindahkannya ke minggu depan."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment
+
+  vi:
+    input: "Xin chào, tôi có lịch hẹn vào thứ Sáu nhưng có việc bận và tôi cần dời sang tuần sau."
+    expect:
+      toolCall:
+        name: reschedule_appointment
+      noToolCall:
+        name: cancel_appointment

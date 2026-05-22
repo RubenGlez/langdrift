@@ -89,3 +89,43 @@ locales:
           reason: duplicate_charge
       noToolCall:
         name: escalate_to_human
+
+  zh:
+    input: "您好，我查看了我的账户，发现本月同一笔费用被扣了两次。这好像不对。"
+    expect:
+      toolCall:
+        name: create_refund_ticket
+        arguments:
+          reason: duplicate_charge
+      noToolCall:
+        name: escalate_to_human
+
+  ru:
+    input: "Здравствуйте, я проверил свой счёт и заметил, что в этом месяце с меня дважды списали одну и ту же сумму. Это не кажется правильным."
+    expect:
+      toolCall:
+        name: create_refund_ticket
+        arguments:
+          reason: duplicate_charge
+      noToolCall:
+        name: escalate_to_human
+
+  id:
+    input: "Halo, saya memeriksa akun saya dan melihat biaya yang sama ditagihkan dua kali bulan ini. Itu sepertinya tidak benar."
+    expect:
+      toolCall:
+        name: create_refund_ticket
+        arguments:
+          reason: duplicate_charge
+      noToolCall:
+        name: escalate_to_human
+
+  vi:
+    input: "Xin chào, tôi đã kiểm tra tài khoản và nhận thấy cùng một khoản phí bị trừ hai lần trong tháng này. Điều đó có vẻ không đúng."
+    expect:
+      toolCall:
+        name: create_refund_ticket
+        arguments:
+          reason: duplicate_charge
+      noToolCall:
+        name: escalate_to_human

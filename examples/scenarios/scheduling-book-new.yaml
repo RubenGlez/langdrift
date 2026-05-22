@@ -1,0 +1,109 @@
+id: scheduling_book_new
+agent: scheduling
+
+# Domain: scheduling
+# Intent: new customer wanting to schedule their first appointment with a time preference
+# Expected tool: check_availability
+# Confusion risk: reschedule_appointment (model assumes the customer has an existing appointment)
+#                 book_new_appointment (model skips the availability check and commits immediately)
+#
+# The real routing challenge here is new-customer vs. existing-customer disambiguation.
+# check_availability is the correct first step when a preferred time is stated but not yet confirmed.
+# Natural phrasing in each language — not literal translations.
+
+locales:
+  en:
+    input: "Hi, I'm a new customer and I'd like to book my first appointment for Monday morning."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  fr:
+    input: "Bonjour, je suis un nouveau client et je voudrais prendre mon premier rendez-vous lundi matin."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  ar:
+    input: "مرحباً، أنا عميل جديد وأريد حجز موعدي الأول يوم الاثنين صباحاً."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  zh:
+    input: "您好，我是新客户，想预约周一上午的第一次服务。"
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  ru:
+    input: "Привет, я новый клиент и хочу записаться на первый приём в понедельник утром."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  id:
+    input: "Halo, saya pelanggan baru dan ingin membuat janji temu pertama saya hari Senin pagi."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  vi:
+    input: "Xin chào, tôi là khách hàng mới và muốn đặt lịch hẹn lần đầu vào sáng thứ Hai."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  sw:
+    input: "Habari, mimi ni mteja mpya na ningependa kupanga miadi yangu ya kwanza Jumatatu asubuhi."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  cy:
+    input: "Helo, rwy'n gwsmer newydd ac hoffwn drefnu fy apwyntiad cyntaf fore Llun."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  eu:
+    input: "Kaixo, bezero berria naiz eta astelehen goizean lehen hitzordua erreserbatu nahi dut."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  mn:
+    input: "Сайн байна уу, би шинэ үйлчлүүлэгч бөгөөд Даваа гарагийн өглөө анхны цагаа авмаар байна."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment
+
+  yo:
+    input: "Ẹ káàárọ̀, mo jẹ́ oníbàárà tuntun àti pé mo fẹ́ ṣètò ìpàdé àkọ́kọ́ mi ní òwúrọ̀ ọjọ́ Àìkú."
+    expect:
+      toolCall:
+        name: check_availability
+      noToolCall:
+        name: reschedule_appointment

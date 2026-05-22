@@ -1,0 +1,108 @@
+id: ecommerce_track_order
+agent: ecommerce
+
+# Domain: ecommerce
+# Intent: customer wants to know where their package is
+# Expected tool: check_order_status
+# Confusion risk: contact_seller (wants info, model routes to seller instead)
+#                 process_refund (model infers non-receipt as a refund trigger)
+#
+# All inputs express the same intent at the same level of directness.
+# Natural phrasing in each language — not literal translations.
+
+locales:
+  en:
+    input: "Hi, I placed an order a few days ago but I haven't received any updates. Where is my package?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  fr:
+    input: "Bonjour, j'ai passé une commande il y a quelques jours mais je n'ai reçu aucune mise à jour. Où est mon colis?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  ar:
+    input: "مرحباً، قدمت طلباً منذ بضعة أيام لكنني لم أتلق أي تحديثات. أين طردي؟"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  zh:
+    input: "您好，我几天前下了一个订单，但一直没有收到任何更新。我的包裹在哪里？"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  ru:
+    input: "Привет, я сделал заказ несколько дней назад, но не получил никаких обновлений. Где мой пакет?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  id:
+    input: "Halo, saya membuat pesanan beberapa hari lalu tapi belum mendapat pembaruan apapun. Di mana paket saya?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  vi:
+    input: "Xin chào, tôi đã đặt hàng vài ngày trước nhưng chưa nhận được cập nhật nào. Gói hàng của tôi ở đâu?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  sw:
+    input: "Habari, niliweka agizo siku chache zilizopita lakini sijapata masasisho yoyote. Kifurushi changu kiko wapi?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  cy:
+    input: "Helo, gwneuthum archeb ychydig ddyddiau yn ôl ond nid wyf wedi cael unrhyw ddiweddariadau. Ble mae fy mharseli?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  eu:
+    input: "Kaixo, duela egun batzuk eskaera egin nuen baina ez dut eguneratzerik jaso. Non dago nire paketea?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  mn:
+    input: "Сайн байна уу, би хэдэн хоногийн өмнө захиалга хийсэн боловч ямар ч мэдээлэл аваагүй байна. Миний багц хаана байна?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller
+
+  yo:
+    input: "Ẹ káàárọ̀, mo ṣe àṣẹ ní ọjọ́ díẹ̀ sẹ́yìn ṣùgbọ́n mi kò tíì gba ìmúdójúìwọ̀n kankan. Níbo ni àpò mi wà?"
+    expect:
+      toolCall:
+        name: check_order_status
+      noToolCall:
+        name: contact_seller

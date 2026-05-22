@@ -94,7 +94,7 @@ async function callOpenAICompat(locale: string, input: string): Promise<{ text: 
       messages: [
         {
           role: "system",
-          content: `You are a multilingual customer support agent. Use the available functions to help the customer. Respond in locale ${locale}.`,
+          content: `You are a multilingual ${systemPromptRole(domain)} agent. Use the available functions to help the customer. Respond in locale ${locale}.`,
         },
         { role: "user", content: input },
       ],
@@ -137,7 +137,7 @@ async function callAnthropic(locale: string, input: string): Promise<{ text: str
     body: JSON.stringify({
       model: modelName,
       max_tokens: 1024,
-      system: `You are a multilingual customer support agent. Use the available functions to help the customer. Respond in locale ${locale}.`,
+      system: `You are a multilingual ${systemPromptRole(domain)} agent. Use the available functions to help the customer. Respond in locale ${locale}.`,
       messages: [{ role: "user", content: input }],
       tools: anthropicTools,
     }),
@@ -192,6 +192,12 @@ function loadTools(d: Domain) {
   if (d === "ecommerce") return ecommerceTools;
   if (d === "scheduling") return schedulingTools;
   return supportTools;
+}
+
+function systemPromptRole(d: Domain): string {
+  if (d === "ecommerce") return "ecommerce customer service";
+  if (d === "scheduling") return "scheduling and appointments";
+  return "customer support";
 }
 
 function defaultApiUrl(p: Provider): string {

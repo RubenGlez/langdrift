@@ -206,6 +206,6 @@ CLI (cli.ts)
 
 The benchmark makes the problem concrete: multilingual agent quality needs behavior-level evals, not only translated UI strings. The next step is making LangDrift useful for teams beyond this repo: a proper getting-started flow, expanded assertions (JSON schema, response language, placeholder preservation), and eventually a CI integration.
 
-The longer-term direction is a full eval system for multilingual agent workflows, with a locale matrix report that makes cross-language failures as easy to catch as a failing unit test.
+The longer-term direction is a full eval system for multilingual agent workflows, with a locale matrix report that makes cross-language failures as easy to catch as a failing unit test. See [ROADMAP.md](ROADMAP.md) for the product roadmap.
 
 See [RESEARCH.md](RESEARCH.md) for the full investigation.

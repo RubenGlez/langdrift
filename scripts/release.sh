@@ -14,5 +14,5 @@ pnpm version "$1"
 
 VERSION=$(node -p "require('./package.json').version")
 
-git push --follow-tags
+git push origin HEAD "v$VERSION"
 gh release create "v$VERSION" --generate-notes --title "v$VERSION"

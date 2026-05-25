@@ -2,106 +2,305 @@
 
 Scenario: ./examples/scenarios/support-cancel-subscription.yaml
 Domain: support
-Model: deepseek-chat (openai-compat)
-Iterations: 3
-Total locale checks: 36
-Pass rate: 28/36 (78%)
-Average run duration: 25086 ms
+Model: gpt-4o-mini (openai-compat)
+Iterations: 10
+Total locale checks: 120
+Pass rate: 120/120 (100%)
+Average run duration: 11989 ms
 
-| Locale | Pass | no_tool_call | wrong_tool | wrong_argument | missing_argument | forbidden_tool |
-| ------ | ---- | ------------ | ---------- | -------------- | ---------------- | -------------- |
-| en     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| fr     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| ar     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| zh     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| ru     | 2/3  | 1            | 0          | 0              | 0                | 0              |
-| id     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| vi     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| sw     | 1/3  | 2            | 0          | 0              | 0                | 0              |
-| cy     | 1/3  | 2            | 0          | 0              | 0                | 0              |
-| eu     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| mn     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| yo     | 0/3  | 3            | 0          | 0              | 0                | 0              |
+| Locale | Pass  | no_tool_call | wrong_tool | wrong_argument | missing_argument | forbidden_tool |
+| ------ | ----- | ------------ | ---------- | -------------- | ---------------- | -------------- |
+| en     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| fr     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| ar     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| zh     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| ru     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| id     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| vi     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| sw     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| cy     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| eu     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| mn     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| yo     | 10/10 | 0            | 0          | 0              | 0                | 0              |
 
 ## Runs
 
 ### Iteration 1
 
-Duration: 24468 ms / Exit: 1
+Duration: 10701 ms / Exit: 0
 
 ```
 LangDrift run
 
 Scenario: support_cancel_subscription
 Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
 
-Locale  Status  Failure       Detail
-en      pass    -             cancel_subscription
-fr      pass    -             cancel_subscription
-ar      pass    -             cancel_subscription
-zh      pass    -             cancel_subscription
-ru      pass    -             cancel_subscription
-id      pass    -             cancel_subscription
-vi      pass    -             cancel_subscription
-sw      fail    no_tool_call  expected cancel_subscription, got no tool calls
-cy      fail    no_tool_call  expected cancel_subscription, got no tool calls
-eu      pass    -             cancel_subscription
-mn      pass    -             cancel_subscription
-yo      fail    no_tool_call  expected cancel_subscription, got no tool calls
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
 
-Result: failed, 3 of 12 locales failed
+Result: passed, 0 of 12 locales failed
 ```
 
 ### Iteration 2
 
-Duration: 24977 ms / Exit: 1
+Duration: 13351 ms / Exit: 0
 
 ```
 LangDrift run
 
 Scenario: support_cancel_subscription
 Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
 
-Locale  Status  Failure       Detail
-en      pass    -             cancel_subscription
-fr      pass    -             cancel_subscription
-ar      pass    -             cancel_subscription
-zh      pass    -             cancel_subscription
-ru      fail    no_tool_call  expected cancel_subscription, got no tool calls
-id      pass    -             cancel_subscription
-vi      pass    -             cancel_subscription
-sw      fail    no_tool_call  expected cancel_subscription, got no tool calls
-cy      fail    no_tool_call  expected cancel_subscription, got no tool calls
-eu      pass    -             cancel_subscription
-mn      pass    -             cancel_subscription
-yo      fail    no_tool_call  expected cancel_subscription, got no tool calls
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
 
-Result: failed, 4 of 12 locales failed
+Result: passed, 0 of 12 locales failed
 ```
 
 ### Iteration 3
 
-Duration: 25812 ms / Exit: 1
+Duration: 10758 ms / Exit: 0
 
 ```
 LangDrift run
 
 Scenario: support_cancel_subscription
 Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
 
-Locale  Status  Failure       Detail
-en      pass    -             cancel_subscription
-fr      pass    -             cancel_subscription
-ar      pass    -             cancel_subscription
-zh      pass    -             cancel_subscription
-ru      pass    -             cancel_subscription
-id      pass    -             cancel_subscription
-vi      pass    -             cancel_subscription
-sw      pass    -             cancel_subscription
-cy      pass    -             cancel_subscription
-eu      pass    -             cancel_subscription
-mn      pass    -             cancel_subscription
-yo      fail    no_tool_call  expected cancel_subscription, got no tool calls
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
 
-Result: failed, 1 of 12 locales failed
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 4
+
+Duration: 11017 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_cancel_subscription
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 5
+
+Duration: 11977 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_cancel_subscription
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 6
+
+Duration: 11672 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_cancel_subscription
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 7
+
+Duration: 11571 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_cancel_subscription
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 8
+
+Duration: 13970 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_cancel_subscription
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 9
+
+Duration: 12679 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_cancel_subscription
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 10
+
+Duration: 12189 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_cancel_subscription
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        cancel_subscription
+fr      1/1     -        cancel_subscription
+ar      1/1     -        cancel_subscription
+zh      1/1     -        cancel_subscription
+ru      1/1     -        cancel_subscription
+id      1/1     -        cancel_subscription
+vi      1/1     -        cancel_subscription
+sw      1/1     -        cancel_subscription
+cy      1/1     -        cancel_subscription
+eu      1/1     -        cancel_subscription
+mn      1/1     -        cancel_subscription
+yo      1/1     -        cancel_subscription
+
+Result: passed, 0 of 12 locales failed
 ```

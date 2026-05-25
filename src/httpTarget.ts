@@ -36,7 +36,15 @@ export async function executeHttpTarget(
   }
 
   if (!response.ok) {
-    return { ok: false, detail: `HTTP ${response.status} from target` };
+    let errorDetail = `HTTP ${response.status} from target`;
+    try {
+      const errBody = (await response.json()) as Record<string, unknown>;
+      if (typeof errBody.error === "string")
+        errorDetail += `: ${errBody.error}`;
+    } catch {
+      // ignore parse errors, use status-only detail
+    }
+    return { ok: false, detail: errorDetail };
   }
 
   let body: unknown;

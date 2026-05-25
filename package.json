@@ -29,13 +29,14 @@
     "test": "node --test tests/*.test.ts",
     "agent": "node ./examples/agent/server.ts",
     "fake-agent": "node ./examples/fake-agent/server.ts",
-    "benchmark": "node ./examples/benchmark/run.ts",
-    "benchmark:support": "DOMAIN=support SCENARIO=./examples/scenarios/support-routing.yaml node ./examples/benchmark/run.ts",
-    "benchmark:ecommerce": "DOMAIN=ecommerce SCENARIO=./examples/scenarios/ecommerce-cancel-order.yaml node ./examples/benchmark/run.ts",
-    "benchmark:scheduling": "DOMAIN=scheduling SCENARIO=./examples/scenarios/scheduling-reschedule.yaml node ./examples/benchmark/run.ts",
-    "benchmark:support-cancel": "DOMAIN=support SCENARIO=./examples/scenarios/support-cancel-subscription.yaml node ./examples/benchmark/run.ts",
-    "benchmark:ecommerce-track": "DOMAIN=ecommerce SCENARIO=./examples/scenarios/ecommerce-track-order.yaml node ./examples/benchmark/run.ts",
-    "benchmark:scheduling-book": "DOMAIN=scheduling SCENARIO=./examples/scenarios/scheduling-book-new.yaml node ./examples/benchmark/run.ts"
+    "benchmark": "node --env-file=.env ./examples/benchmark/run.ts",
+    "benchmark:support": "DOMAIN=support SCENARIO=./examples/scenarios/support-routing.yaml node --env-file=.env ./examples/benchmark/run.ts",
+    "benchmark:ecommerce": "DOMAIN=ecommerce SCENARIO=./examples/scenarios/ecommerce-cancel-order.yaml node --env-file=.env ./examples/benchmark/run.ts",
+    "benchmark:scheduling": "DOMAIN=scheduling SCENARIO=./examples/scenarios/scheduling-reschedule.yaml node --env-file=.env ./examples/benchmark/run.ts",
+    "benchmark:support-cancel": "DOMAIN=support SCENARIO=./examples/scenarios/support-cancel-subscription.yaml node --env-file=.env ./examples/benchmark/run.ts",
+    "benchmark:ecommerce-track": "DOMAIN=ecommerce SCENARIO=./examples/scenarios/ecommerce-track-order.yaml node --env-file=.env ./examples/benchmark/run.ts",
+    "benchmark:scheduling-book": "DOMAIN=scheduling SCENARIO=./examples/scenarios/scheduling-book-new.yaml node --env-file=.env ./examples/benchmark/run.ts",
+    "benchmark:all": "ITERATIONS=10 pnpm benchmark:support && ITERATIONS=10 pnpm benchmark:support-cancel && ITERATIONS=10 pnpm benchmark:ecommerce && ITERATIONS=10 pnpm benchmark:ecommerce-track && ITERATIONS=10 pnpm benchmark:scheduling && ITERATIONS=10 pnpm benchmark:scheduling-book"
   },
   "engines": {
     "node": ">=24"

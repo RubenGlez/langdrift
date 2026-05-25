@@ -16,7 +16,7 @@ I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 local
 
 This is an applied experiment, not scientific evidence. It uses one model, one agent implementation, a small scenario set, and three iterations per locale. Read the results as a reproducible demonstration of a real risk, not as a ranking of languages, models, or agent architectures.
 
-**Results (3 iterations × 12 locales):**
+**DeepSeek deepseek-chat — 3 iterations × 12 locales:**
 
 | Scenario | Pass rate | Failing locale checks |
 | -------- | --------- | --------------- |
@@ -27,28 +27,41 @@ This is an applied experiment, not scientific evidence. It uses one model, one a
 | scheduling-reschedule | 78% (28/36) | ar (2/3), zh (1/3), sw (3/3), cy (1/3), eu (1/3) |
 | scheduling-book-new | 92% (33/36) | zh (1/3), eu (1/3), mn (1/3) |
 
-English passed 3/3 in every scenario. The failures are language-specific within this model, prompt, and tool setup.
+**gpt-4o-mini — 10 iterations × 12 locales:**
 
-The interesting pattern is recurrence: Swahili fails in support routing, subscription cancellation, order tracking, and scheduling. Chinese fails in five of the six scenarios. That does not prove a universal language ranking, but it is exactly the kind of cross-locale behavior drift that English-only evals are blind to.
+| Scenario | Pass rate | Failing locale checks |
+| -------- | --------- | --------------- |
+| support-routing | 100% (120/120) | — |
+| support-cancel-subscription | 100% (120/120) | — |
+| ecommerce-cancel-order | 92% (110/120) | eu (10/10, wrong argument) |
+| ecommerce-track-order | 100% (120/120) | — |
+| scheduling-reschedule | 92% (110/120) | eu (10/10, no tool call) |
+| scheduling-book-new | 0% (0/120) | all locales — model behavior difference (see below) |
+
+English passed in every scenario on both models.
+
+**Basque (`eu`) is a consistent weak spot for gpt-4o-mini**, failing deterministically across two scenarios even where other non-English locales pass cleanly. This pattern held on DeepSeek too, suggesting it is not model-specific.
+
+**`scheduling-book-new` at 0% is a model behavior difference, not locale drift.** The scenario expects the agent to check availability before booking. gpt-4o-mini interprets "I'd like to book my first appointment" as a direct booking request and calls `book_new_appointment` every time, in every language. DeepSeek took the more conservative `check_availability` path. Neither is strictly wrong — this is a scenario design question as much as a model quality question, and LangDrift surfaces it either way.
 
 ```text
-Scenario: ecommerce-cancel-order (sample iteration)
+Scenario: ecommerce-cancel-order (gpt-4o-mini, iteration 1)
 
-Locale  Status  Failure       Detail
-en      pass    -             cancel_order
-fr      pass    -             cancel_order
-ar      pass    -             cancel_order
-zh      fail    no_tool_call  expected cancel_order, got no tool calls
-ru      pass    -             cancel_order
-id      pass    -             cancel_order
-vi      pass    -             cancel_order
-sw      pass    -             cancel_order
-cy      pass    -             cancel_order
-eu      fail    no_tool_call  expected cancel_order, got no tool calls
-mn      pass    -             cancel_order
-yo      fail    no_tool_call  expected cancel_order, got no tool calls
+Locale  Passed  Failure         Detail
+en      1/1     -               cancel_order
+fr      1/1     -               cancel_order
+ar      1/1     -               cancel_order
+zh      1/1     -               cancel_order
+ru      1/1     -               cancel_order
+id      1/1     -               cancel_order
+vi      1/1     -               cancel_order
+sw      1/1     -               cancel_order
+cy      1/1     -               cancel_order
+eu      0/1     wrong_argument  expected argument reason=ordered_by_mistake, got other
+mn      1/1     -               cancel_order
+yo      1/1     -               cancel_order
 
-Result: failed, 3 of 12 locales failed
+Result: failed, 1 of 12 locales failed
 ```
 
 None of this is visible in English-only testing. English passes cleanly every time, which is precisely why these failures go undetected in practice.

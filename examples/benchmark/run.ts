@@ -59,6 +59,11 @@ try {
   console.error(`\nResults written to ${outPath}`);
 } finally {
   server.kill("SIGINT");
+  await Promise.race([
+    once(server, "exit"),
+    new Promise<void>((resolve) => setTimeout(resolve, 3000)),
+  ]);
+  if (!server.killed) server.kill("SIGKILL");
 }
 
 async function waitForServer(): Promise<void> {
@@ -89,13 +94,13 @@ function parseOutput(output: string): Record<string, LocaleSummary> {
   const summary: Record<string, LocaleSummary> = {};
 
   for (const line of output.split("\n")) {
-    const match = line.match(/^([a-z]{2,5})\s+(pass|fail)\s+(\S+)\s+(.*)/);
+    const match = line.match(/^([a-z]{2,5})\s+(\d+)\/(\d+)\s+(\S+)\s+(.*)/);
     if (match) {
-      summary[match[1]] = {
-        status: match[2] as "pass" | "fail",
-        failureMode: match[2] === "fail" ? (match[3] === "-" ? "unknown" : match[3]) : null,
-        detail: match[4] ?? "",
-      };
+      const passed = Number(match[2]);
+      const total = Number(match[3]);
+      const status = passed === total ? "pass" : "fail";
+      const failureMode = match[4] === "-" ? null : match[4];
+      summary[match[1]] = { status, failureMode, detail: match[5] ?? "" };
     }
   }
 

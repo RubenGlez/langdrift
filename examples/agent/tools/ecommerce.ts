@@ -13,6 +13,7 @@ export const ecommerceTools = [
         },
       },
       required: ["reason"],
+      additionalProperties: false,
     },
   },
   {
@@ -28,6 +29,7 @@ export const ecommerceTools = [
         },
       },
       required: ["query"],
+      additionalProperties: false,
     },
   },
   {
@@ -44,6 +46,7 @@ export const ecommerceTools = [
         },
       },
       required: ["reason"],
+      additionalProperties: false,
     },
   },
   {
@@ -59,6 +62,7 @@ export const ecommerceTools = [
         },
       },
       required: ["new_address"],
+      additionalProperties: false,
     },
   },
   {
@@ -74,6 +78,7 @@ export const ecommerceTools = [
         },
       },
       required: ["message"],
+      additionalProperties: false,
     },
   },
 ];

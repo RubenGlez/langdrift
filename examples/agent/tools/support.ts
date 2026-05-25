@@ -13,6 +13,7 @@ export const supportTools = [
         },
       },
       required: ["reason"],
+      additionalProperties: false,
     },
   },
   {
@@ -28,6 +29,7 @@ export const supportTools = [
         },
       },
       required: ["query"],
+      additionalProperties: false,
     },
   },
   {
@@ -43,6 +45,7 @@ export const supportTools = [
         },
       },
       required: ["reason"],
+      additionalProperties: false,
     },
   },
   {
@@ -58,6 +61,7 @@ export const supportTools = [
         },
       },
       required: ["notes"],
+      additionalProperties: false,
     },
   },
   {
@@ -73,6 +77,7 @@ export const supportTools = [
         },
       },
       required: ["reason"],
+      additionalProperties: false,
     },
   },
 ];

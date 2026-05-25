@@ -2,106 +2,305 @@
 
 Scenario: ./examples/scenarios/ecommerce-track-order.yaml
 Domain: ecommerce
-Model: deepseek-chat (openai-compat)
-Iterations: 3
-Total locale checks: 36
-Pass rate: 29/36 (81%)
-Average run duration: 25239 ms
+Model: gpt-4o-mini (openai-compat)
+Iterations: 10
+Total locale checks: 120
+Pass rate: 120/120 (100%)
+Average run duration: 17909 ms
 
-| Locale | Pass | no_tool_call | wrong_tool | wrong_argument | missing_argument | forbidden_tool |
-| ------ | ---- | ------------ | ---------- | -------------- | ---------------- | -------------- |
-| en     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| fr     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| ar     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| zh     | 0/3  | 3            | 0          | 0              | 0                | 0              |
-| ru     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| id     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| vi     | 2/3  | 1            | 0          | 0              | 0                | 0              |
-| sw     | 0/3  | 3            | 0          | 0              | 0                | 0              |
-| cy     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| eu     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| mn     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| yo     | 3/3  | 0            | 0          | 0              | 0                | 0              |
+| Locale | Pass  | no_tool_call | wrong_tool | wrong_argument | missing_argument | forbidden_tool |
+| ------ | ----- | ------------ | ---------- | -------------- | ---------------- | -------------- |
+| en     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| fr     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| ar     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| zh     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| ru     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| id     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| vi     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| sw     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| cy     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| eu     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| mn     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| yo     | 10/10 | 0            | 0          | 0              | 0                | 0              |
 
 ## Runs
 
 ### Iteration 1
 
-Duration: 25249 ms / Exit: 1
+Duration: 28721 ms / Exit: 0
 
 ```
 LangDrift run
 
 Scenario: ecommerce_track_order
 Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
 
-Locale  Status  Failure       Detail
-en      pass    -             check_order_status
-fr      pass    -             check_order_status
-ar      pass    -             check_order_status
-zh      fail    no_tool_call  expected check_order_status, got no tool calls
-ru      pass    -             check_order_status
-id      pass    -             check_order_status
-vi      pass    -             check_order_status
-sw      fail    no_tool_call  expected check_order_status, got no tool calls
-cy      pass    -             check_order_status
-eu      pass    -             check_order_status
-mn      pass    -             check_order_status
-yo      pass    -             check_order_status
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
 
-Result: failed, 2 of 12 locales failed
+Result: passed, 0 of 12 locales failed
 ```
 
 ### Iteration 2
 
-Duration: 23964 ms / Exit: 1
+Duration: 20165 ms / Exit: 0
 
 ```
 LangDrift run
 
 Scenario: ecommerce_track_order
 Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
 
-Locale  Status  Failure       Detail
-en      pass    -             check_order_status
-fr      pass    -             check_order_status
-ar      pass    -             check_order_status
-zh      fail    no_tool_call  expected check_order_status, got no tool calls
-ru      pass    -             check_order_status
-id      pass    -             check_order_status
-vi      fail    no_tool_call  expected check_order_status, got no tool calls
-sw      fail    no_tool_call  expected check_order_status, got no tool calls
-cy      pass    -             check_order_status
-eu      pass    -             check_order_status
-mn      pass    -             check_order_status
-yo      pass    -             check_order_status
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
 
-Result: failed, 3 of 12 locales failed
+Result: passed, 0 of 12 locales failed
 ```
 
 ### Iteration 3
 
-Duration: 26505 ms / Exit: 1
+Duration: 14643 ms / Exit: 0
 
 ```
 LangDrift run
 
 Scenario: ecommerce_track_order
 Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
 
-Locale  Status  Failure       Detail
-en      pass    -             check_order_status
-fr      pass    -             check_order_status
-ar      pass    -             check_order_status
-zh      fail    no_tool_call  expected check_order_status, got no tool calls
-ru      pass    -             check_order_status
-id      pass    -             check_order_status
-vi      pass    -             check_order_status
-sw      fail    no_tool_call  expected check_order_status, got no tool calls
-cy      pass    -             check_order_status
-eu      pass    -             check_order_status
-mn      pass    -             check_order_status
-yo      pass    -             check_order_status
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
 
-Result: failed, 2 of 12 locales failed
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 4
+
+Duration: 16730 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: ecommerce_track_order
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 5
+
+Duration: 21272 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: ecommerce_track_order
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 6
+
+Duration: 16065 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: ecommerce_track_order
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 7
+
+Duration: 14488 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: ecommerce_track_order
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 8
+
+Duration: 14591 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: ecommerce_track_order
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 9
+
+Duration: 15091 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: ecommerce_track_order
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 10
+
+Duration: 17323 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: ecommerce_track_order
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        check_order_status
+fr      1/1     -        check_order_status
+ar      1/1     -        check_order_status
+zh      1/1     -        check_order_status
+ru      1/1     -        check_order_status
+id      1/1     -        check_order_status
+vi      1/1     -        check_order_status
+sw      1/1     -        check_order_status
+cy      1/1     -        check_order_status
+eu      1/1     -        check_order_status
+mn      1/1     -        check_order_status
+yo      1/1     -        check_order_status
+
+Result: passed, 0 of 12 locales failed
 ```

@@ -2,106 +2,305 @@
 
 Scenario: ./examples/scenarios/support-routing.yaml
 Domain: support
-Model: deepseek-chat (openai-compat)
-Iterations: 3
-Total locale checks: 36
-Pass rate: 31/36 (86%)
-Average run duration: 31937 ms
+Model: gpt-4o-mini (openai-compat)
+Iterations: 10
+Total locale checks: 120
+Pass rate: 120/120 (100%)
+Average run duration: 14107 ms
 
-| Locale | Pass | no_tool_call | wrong_tool | wrong_argument | missing_argument | forbidden_tool |
-| ------ | ---- | ------------ | ---------- | -------------- | ---------------- | -------------- |
-| en     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| fr     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| ar     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| sw     | 0/3  | 3            | 0          | 0              | 0                | 0              |
-| cy     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| eu     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| mn     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| yo     | 2/3  | 1            | 0          | 0              | 0                | 0              |
-| zh     | 2/3  | 1            | 0          | 0              | 0                | 0              |
-| ru     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| id     | 3/3  | 0            | 0          | 0              | 0                | 0              |
-| vi     | 3/3  | 0            | 0          | 0              | 0                | 0              |
+| Locale | Pass  | no_tool_call | wrong_tool | wrong_argument | missing_argument | forbidden_tool |
+| ------ | ----- | ------------ | ---------- | -------------- | ---------------- | -------------- |
+| en     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| fr     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| ar     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| sw     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| cy     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| eu     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| mn     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| yo     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| zh     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| ru     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| id     | 10/10 | 0            | 0          | 0              | 0                | 0              |
+| vi     | 10/10 | 0            | 0          | 0              | 0                | 0              |
 
 ## Runs
 
 ### Iteration 1
 
-Duration: 31908 ms / Exit: 1
+Duration: 15096 ms / Exit: 0
 
 ```
 LangDrift run
 
 Scenario: support_routing
 Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
 
-Locale  Status  Failure       Detail
-en      pass    -             create_refund_ticket
-fr      pass    -             create_refund_ticket
-ar      pass    -             create_refund_ticket
-sw      fail    no_tool_call  expected create_refund_ticket, got no tool calls
-cy      pass    -             create_refund_ticket
-eu      pass    -             create_refund_ticket
-mn      pass    -             create_refund_ticket
-yo      fail    no_tool_call  expected create_refund_ticket, got no tool calls
-zh      fail    no_tool_call  expected create_refund_ticket, got no tool calls
-ru      pass    -             create_refund_ticket
-id      pass    -             create_refund_ticket
-vi      pass    -             create_refund_ticket
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
 
-Result: failed, 3 of 12 locales failed
+Result: passed, 0 of 12 locales failed
 ```
 
 ### Iteration 2
 
-Duration: 31165 ms / Exit: 1
+Duration: 11500 ms / Exit: 0
 
 ```
 LangDrift run
 
 Scenario: support_routing
 Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
 
-Locale  Status  Failure       Detail
-en      pass    -             create_refund_ticket
-fr      pass    -             create_refund_ticket
-ar      pass    -             create_refund_ticket
-sw      fail    no_tool_call  expected create_refund_ticket, got no tool calls
-cy      pass    -             create_refund_ticket
-eu      pass    -             create_refund_ticket
-mn      pass    -             create_refund_ticket
-yo      pass    -             create_refund_ticket
-zh      pass    -             create_refund_ticket
-ru      pass    -             create_refund_ticket
-id      pass    -             create_refund_ticket
-vi      pass    -             create_refund_ticket
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
 
-Result: failed, 1 of 12 locales failed
+Result: passed, 0 of 12 locales failed
 ```
 
 ### Iteration 3
 
-Duration: 32738 ms / Exit: 1
+Duration: 12501 ms / Exit: 0
 
 ```
 LangDrift run
 
 Scenario: support_routing
 Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
 
-Locale  Status  Failure       Detail
-en      pass    -             create_refund_ticket
-fr      pass    -             create_refund_ticket
-ar      pass    -             create_refund_ticket
-sw      fail    no_tool_call  expected create_refund_ticket, got no tool calls
-cy      pass    -             create_refund_ticket
-eu      pass    -             create_refund_ticket
-mn      pass    -             create_refund_ticket
-yo      pass    -             create_refund_ticket
-zh      pass    -             create_refund_ticket
-ru      pass    -             create_refund_ticket
-id      pass    -             create_refund_ticket
-vi      pass    -             create_refund_ticket
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
 
-Result: failed, 1 of 12 locales failed
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 4
+
+Duration: 11189 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_routing
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 5
+
+Duration: 13792 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_routing
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 6
+
+Duration: 11056 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_routing
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 7
+
+Duration: 12269 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_routing
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 8
+
+Duration: 30909 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_routing
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 9
+
+Duration: 11294 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_routing
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
+
+Result: passed, 0 of 12 locales failed
+```
+
+### Iteration 10
+
+Duration: 11464 ms / Exit: 0
+
+```
+LangDrift run
+
+Scenario: support_routing
+Target: http://127.0.0.1:3010/api/agent
+Iterations: 1
+
+Locale  Passed  Failure  Detail
+en      1/1     -        create_refund_ticket
+fr      1/1     -        create_refund_ticket
+ar      1/1     -        create_refund_ticket
+sw      1/1     -        create_refund_ticket
+cy      1/1     -        create_refund_ticket
+eu      1/1     -        create_refund_ticket
+mn      1/1     -        create_refund_ticket
+yo      1/1     -        create_refund_ticket
+zh      1/1     -        create_refund_ticket
+ru      1/1     -        create_refund_ticket
+id      1/1     -        create_refund_ticket
+vi      1/1     -        create_refund_ticket
+
+Result: passed, 0 of 12 locales failed
 ```

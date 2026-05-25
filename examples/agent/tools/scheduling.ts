@@ -12,6 +12,7 @@ export const schedulingTools = [
         },
       },
       required: ["reason"],
+      additionalProperties: false,
     },
   },
   {
@@ -27,6 +28,7 @@ export const schedulingTools = [
         },
       },
       required: ["reason"],
+      additionalProperties: false,
     },
   },
   {
@@ -42,6 +44,7 @@ export const schedulingTools = [
         },
       },
       required: ["requested_time"],
+      additionalProperties: false,
     },
   },
   {
@@ -57,6 +60,7 @@ export const schedulingTools = [
         },
       },
       required: ["preferred_window"],
+      additionalProperties: false,
     },
   },
   {
@@ -73,6 +77,7 @@ export const schedulingTools = [
         },
       },
       required: ["channel"],
+      additionalProperties: false,
     },
   },
 ];

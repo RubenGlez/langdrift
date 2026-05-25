@@ -11,7 +11,9 @@ export type ExecuteTargetResult =
   | { ok: true; response: TargetResponse }
   | { ok: false; detail: string };
 
-export async function executeHttpTarget(input: ExecuteTargetInput): Promise<ExecuteTargetResult> {
+export async function executeHttpTarget(
+  input: ExecuteTargetInput,
+): Promise<ExecuteTargetResult> {
   let response: Response;
 
   try {
@@ -27,7 +29,10 @@ export async function executeHttpTarget(input: ExecuteTargetInput): Promise<Exec
       }),
     });
   } catch (error) {
-    return { ok: false, detail: error instanceof Error ? error.message : "network error" };
+    return {
+      ok: false,
+      detail: error instanceof Error ? error.message : "network error",
+    };
   }
 
   if (!response.ok) {
@@ -69,7 +74,10 @@ function normalizeToolCalls(value: unknown): TargetResponse["toolCalls"] {
   }
 
   return value
-    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+    .filter(
+      (item): item is Record<string, unknown> =>
+        Boolean(item) && typeof item === "object",
+    )
     .filter((item) => typeof item.name === "string")
     .map((item) => ({
       name: item.name as string,

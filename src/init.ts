@@ -1,7 +1,12 @@
 import { writeFile } from "node:fs/promises";
 
 export const DEFAULT_INIT_PATH = "langdrift.scenario.yaml";
-export const INIT_TEMPLATES = ["support", "ecommerce", "scheduling", "generic"] as const;
+export const INIT_TEMPLATES = [
+  "support",
+  "ecommerce",
+  "scheduling",
+  "generic",
+] as const;
 
 export type InitTemplate = (typeof INIT_TEMPLATES)[number];
 

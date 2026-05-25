@@ -12,15 +12,11 @@ LangDrift starts as an experiment, but the product direction is broader: make mu
 
 ## Now
 
-Three things, in order:
+One thing remaining:
 
 1. **Strengthen the experiment.** Re-run all six scenarios with an OpenAI model and increase iterations from 3 to at least 10. This is the credibility foundation: without it, the benchmark results are interesting but easy to dismiss. See the Research Backlog for specifics.
 
-2. **Build the locale matrix (v0.2).** The aggregate view across scenarios is the core product payoff — the thing that turns a single run into a finding worth sharing or acting on.
-
-3. **Sharpen the README narrative.** The README should read as a coherent argument: here's the problem, here's the evidence, here's the tool, here's what's next. A reader landing on the repo cold should come away with all of that in under five minutes.
-
-Everything else in the roadmap is planned and worth building, but none of it starts before these three are done.
+The locale matrix (v0.2) is done. The experiment re-run is the remaining blocker before moving on.
 
 ## v0.1 Developer Loop
 
@@ -39,12 +35,14 @@ Current status: complete.
 
 Goal: make failures easy to scan, share, and debug.
 
-- Add an aggregate locale matrix across scenarios and iterations.
-- Include pass rate, failure mode, and first failing detail per locale.
-- Save raw target responses for failed runs.
-- Save enough request context for failed runs to reproduce a locale-specific failure.
-- Include links or file paths from matrix rows to the raw failed responses.
-- Generate markdown reports suitable for PRs and QA review.
+Current status: core complete.
+
+- Add an aggregate locale matrix across scenarios and iterations. Done.
+- Include pass rate, failure mode, and first failing detail per locale. Done.
+- Generate markdown reports suitable for PRs and QA review. Done.
+- Save raw target responses for failed runs. Deferred to v0.2 follow-up.
+- Save enough request context for failed runs to reproduce a locale-specific failure. Deferred.
+- Include links or file paths from matrix rows to the raw failed responses. Deferred.
 - Keep HTML reports exploratory until the markdown and JSON artifacts are clearly useful.
 
 ## v0.3 Low-friction Integration
@@ -97,7 +95,7 @@ Goal: evaluate behavior beyond a single tool call.
 
 These items strengthen the study and the public narrative. They are not product features; they improve the credibility and reach of the underlying experiment.
 
-- Re-run all six scenarios with an OpenAI model (gpt-4o-mini is cheap enough) and compare pass rates side by side. This is the single most important credibility improvement: if the same locales fail on a different model, the finding is about the language, not deepseek-chat.
+- Re-run all six scenarios with an OpenAI model (gpt-4o-mini is cheap enough) and compare pass rates side by side. This is the single most important credibility improvement: if similar patterns appear on a different model, the finding is less likely to be only deepseek-chat-specific.
 - Increase iterations per locale from 3 to at least 10. This makes the pass rate numbers meaningful and reduces the chance that any individual result is noise.
 - Preserve raw failed responses in the benchmark output so readers can see what the model actually returned instead of calling a tool.
 - Locale prompt authoring without native review is acknowledged as a limitation in `RESEARCH.md`. It is deferred: native review at scale is not practical for a solo project. The limitation is documented; it should be disclosed wherever the results are shared.

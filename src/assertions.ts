@@ -1,24 +1,37 @@
 import type { FailureMode, ScenarioLocale, TargetResponse } from "./types.ts";
 
 type Pass = { pass: true; detail: string; failureMode: null };
-type Fail = { pass: false; detail: string; failureMode: Exclude<FailureMode, null> };
+type Fail = {
+  pass: false;
+  detail: string;
+  failureMode: Exclude<FailureMode, null>;
+};
 type AssertionResult = Pass | Fail;
 
 export function assertExpectedToolCall(
   expected: ScenarioLocale["expect"],
   response: TargetResponse,
 ): AssertionResult {
-  const forbiddenResult = assertForbiddenToolCall(expected.noToolCall?.name, response);
+  const forbiddenResult = assertForbiddenToolCall(
+    expected.noToolCall?.name,
+    response,
+  );
 
   if (!forbiddenResult.pass) {
     return forbiddenResult;
   }
 
   const expectedName = expected.toolCall.name;
-  const toolCall = response.toolCalls.find((candidate) => candidate.name === expectedName);
+  const toolCall = response.toolCalls.find(
+    (candidate) => candidate.name === expectedName,
+  );
 
   if (toolCall) {
-    return assertExpectedArguments(expectedName, expected.toolCall.arguments, toolCall.arguments);
+    return assertExpectedArguments(
+      expectedName,
+      expected.toolCall.arguments,
+      toolCall.arguments,
+    );
   }
 
   if (response.toolCalls.length === 0) {
@@ -66,7 +79,11 @@ function assertExpectedArguments(
     return { pass: true, detail: toolName, failureMode: null };
   }
 
-  if (!actualArguments || typeof actualArguments !== "object" || Array.isArray(actualArguments)) {
+  if (
+    !actualArguments ||
+    typeof actualArguments !== "object" ||
+    Array.isArray(actualArguments)
+  ) {
     return {
       pass: false,
       failureMode: "missing_argument",

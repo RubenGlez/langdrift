@@ -39,6 +39,9 @@ export type FailureMode =
 export type LocaleResult = {
   locale: string;
   status: "pass" | "fail";
+  passed: number;
+  failed: number;
+  total: number;
   failureMode: FailureMode;
   detail: string;
   response?: TargetResponse;
@@ -47,5 +50,12 @@ export type LocaleResult = {
 export type RunResult = {
   scenarioId: string;
   target: string;
+  iterations: number;
   results: LocaleResult[];
+};
+
+export type MatrixResult = {
+  target: string;
+  iterations: number;
+  runs: RunResult[];
 };

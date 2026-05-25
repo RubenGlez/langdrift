@@ -1,9 +1,16 @@
 #!/usr/bin/env node
 import { INIT_TEMPLATES, initScenario, isInitTemplate } from "./init.ts";
 import { loadScenario } from "./scenario.ts";
-import { runScenario } from "./runner.ts";
-import { formatJsonReport } from "./reportJson.ts";
-import { formatTerminalReport } from "./reportTerminal.ts";
+import { resolveScenarioPaths, runScenario, runScenarios } from "./runner.ts";
+import { formatJsonMatrixReport, formatJsonReport } from "./reportJson.ts";
+import {
+  formatTerminalMatrixReport,
+  formatTerminalReport,
+} from "./reportTerminal.ts";
+import {
+  formatMarkdownMatrixReport,
+  formatMarkdownRunReport,
+} from "./reportMarkdown.ts";
 
 type CliOptions = RunOptions | InitOptions;
 
@@ -11,7 +18,8 @@ type RunOptions = {
   command: "run";
   scenarioPath: string;
   target: string;
-  format: "text" | "json";
+  iterations: number;
+  format: "text" | "json" | "markdown";
 };
 
 type InitOptions = {
@@ -29,15 +37,50 @@ async function main(): Promise<void> {
     return;
   }
 
-  const scenario = await loadScenario(options.scenarioPath);
-  const run = await runScenario(scenario, options.target);
+  const paths = await resolveScenarioPaths(options.scenarioPath);
 
-  process.stdout.write(
-    options.format === "json" ? formatJsonReport(run) : formatTerminalReport(run),
-  );
+  if (paths.length === 0) {
+    throw new Error(`No scenario files found at ${options.scenarioPath}`);
+  }
 
-  if (run.results.some((result) => result.status === "fail")) {
-    process.exitCode = 1;
+  const isMatrix = paths.length > 1;
+
+  if (isMatrix) {
+    const matrix = await runScenarios(
+      paths,
+      options.target,
+      options.iterations,
+    );
+
+    if (options.format === "json") {
+      process.stdout.write(formatJsonMatrixReport(matrix));
+    } else if (options.format === "markdown") {
+      process.stdout.write(formatMarkdownMatrixReport(matrix));
+    } else {
+      process.stdout.write(formatTerminalMatrixReport(matrix));
+    }
+
+    const anyFailed = matrix.runs.some((run) =>
+      run.results.some((r) => r.status === "fail"),
+    );
+    if (anyFailed) {
+      process.exitCode = 1;
+    }
+  } else {
+    const scenario = await loadScenario(paths[0]);
+    const run = await runScenario(scenario, options.target, options.iterations);
+
+    if (options.format === "json") {
+      process.stdout.write(formatJsonReport(run));
+    } else if (options.format === "markdown") {
+      process.stdout.write(formatMarkdownRunReport(run));
+    } else {
+      process.stdout.write(formatTerminalReport(run));
+    }
+
+    if (run.results.some((result) => result.status === "fail")) {
+      process.exitCode = 1;
+    }
   }
 }
 
@@ -45,7 +88,8 @@ function parseArgs(args: string[]): CliOptions {
   if (args[0] === "init") {
     const path = parseInitPath(args.slice(1));
     const templateFlagIndex = args.indexOf("--template");
-    const template = templateFlagIndex === -1 ? "support" : args[templateFlagIndex + 1];
+    const template =
+      templateFlagIndex === -1 ? "support" : args[templateFlagIndex + 1];
 
     if (!template || !isInitTemplate(template)) {
       throw new Error(usage());
@@ -63,12 +107,18 @@ function parseArgs(args: string[]): CliOptions {
   const target = targetFlagIndex === -1 ? undefined : args[targetFlagIndex + 1];
   const formatFlagIndex = args.indexOf("--format");
   const format = formatFlagIndex === -1 ? "text" : args[formatFlagIndex + 1];
+  const iterationsFlagIndex = args.indexOf("--iterations");
+  const iterationsRaw =
+    iterationsFlagIndex === -1 ? "1" : args[iterationsFlagIndex + 1];
+  const iterations = Number(iterationsRaw);
 
   if (
     !scenarioPath ||
     scenarioPath.startsWith("--") ||
     !target ||
-    (format !== "text" && format !== "json")
+    (format !== "text" && format !== "json" && format !== "markdown") ||
+    !Number.isInteger(iterations) ||
+    iterations < 1
   ) {
     throw new Error(usage());
   }
@@ -77,6 +127,7 @@ function parseArgs(args: string[]): CliOptions {
     command: "run",
     scenarioPath,
     target,
+    iterations,
     format,
   };
 }
@@ -100,7 +151,7 @@ function usage(): string {
   return [
     "Usage:",
     `  langdrift init [scenario.yaml] [--template ${INIT_TEMPLATES.join("|")}]`,
-    "  langdrift run <scenario.yaml> --target <url> [--format text|json]",
+    "  langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown]",
   ].join("\n");
 }
 

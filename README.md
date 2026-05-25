@@ -2,15 +2,19 @@
 
 A locale-aware eval harness for AI agent behavior.
 
+LangDrift is a research-backed developer tool prototype. It starts with a question, tests it in a small reproducible setup, and turns the result into a CLI that agent teams can point at their own systems.
+
 ## The thesis
 
 AI localization is moving from translated strings to localized behavior. When you build an AI agent, you're not just rendering UI text in multiple languages: your agent interprets intent, selects tools, and produces structured output. Those behaviors can drift silently across languages while your translation coverage looks fine.
 
-I wanted to know whether that drift was observable in a small, controlled agent setup, so I ran a benchmark.
+The goal is not to publish a universal benchmark or rank languages. The goal is to make a product-shaped risk visible: English-only evals can pass while localized agent behavior fails at the tool-use boundary.
 
 ## The experiment
 
-I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 locales each, using a 5-tool-per-domain agent. The methodology: write and validate each English prompt to 3/3 pass first, then write equivalent natural-language phrasings in the other 11 languages. That controls for one obvious failure source: the base English scenario being ambiguous. It does not make the results scientific proof, but it does make language-conditioned drift visible and measurable in this setup. Three iterations per scenario, 36 locale checks each.
+I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 locales each, using a 5-tool-per-domain agent. The methodology: write and validate each English prompt to 3/3 pass first, then write equivalent natural-language phrasings in the other 11 languages. That controls for one obvious failure source: the base English scenario being ambiguous.
+
+This is an applied experiment, not scientific evidence. It uses one model, one agent implementation, a small scenario set, and three iterations per locale. Read the results as a reproducible demonstration of a real risk, not as a ranking of languages, models, or agent architectures.
 
 **Results (3 iterations × 12 locales):**
 
@@ -25,29 +29,7 @@ I ran 6 scenarios across 3 domains (support, ecommerce, scheduling) and 12 local
 
 English passed 3/3 in every scenario. The failures are language-specific within this model, prompt, and tool setup.
 
-**Failures cluster around the same locales across unrelated domains.** Indonesian, French, and English pass consistently. Swahili and Yoruba fail regularly: the model either routes to the wrong tool or drops tool use entirely. Chinese fails more than expected given its resource level, which may suggest the gap is specifically in instruction-tuning and tool-use data. These observations are from a single model and a small number of iterations, so they point at hypotheses rather than conclusions.
-
-```text
-Scenario: support_routing (sample iteration)
-
-Locale  Status  Failure       Detail
-en      pass    -             create_refund_ticket
-fr      pass    -             create_refund_ticket
-ar      pass    -             create_refund_ticket
-sw      fail    no_tool_call  expected create_refund_ticket, got no tool calls
-cy      pass    -             create_refund_ticket
-eu      pass    -             create_refund_ticket
-mn      pass    -             create_refund_ticket
-yo      pass    -             create_refund_ticket
-zh      fail    no_tool_call  expected create_refund_ticket, got no tool calls
-ru      pass    -             create_refund_ticket
-id      pass    -             create_refund_ticket
-vi      pass    -             create_refund_ticket
-
-Result: failed, 2 of 12 locales failed
-```
-
-**The failures recur across domains and intents.** Swahili fails in support routing, subscription cancellation, order tracking, and scheduling. Chinese fails in five of the six scenarios. That does not prove a universal language ranking, but it is exactly the kind of repeated cross-locale failure pattern that English-only evals are blind to.
+The interesting pattern is recurrence: Swahili fails in support routing, subscription cancellation, order tracking, and scheduling. Chinese fails in five of the six scenarios. That does not prove a universal language ranking, but it is exactly the kind of cross-locale behavior drift that English-only evals are blind to.
 
 ```text
 Scenario: ecommerce-cancel-order (sample iteration)
@@ -71,11 +53,7 @@ Result: failed, 3 of 12 locales failed
 
 None of this is visible in English-only testing. English passes cleanly every time, which is precisely why these failures go undetected in practice.
 
-The full benchmark results are in `examples/benchmark/results/`. The original investigation and supporting research is in [RESEARCH.md](RESEARCH.md).
-
-## How to read this
-
-This is an applied experiment, not scientific evidence. The benchmark uses one model, one agent implementation, a small scenario set, and three iterations per locale. The results should be read as a product-shaped demonstration of a real risk: multilingual agents can preserve text-level localization while drifting at the behavior boundary.
+The full benchmark results are in `examples/benchmark/results/`.
 
 ## What LangDrift does
 
@@ -94,7 +72,21 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 - Report the same run as stable JSON for CI and tooling
 - Exit non-zero on failure (CI-ready)
 - Generate starter scenarios with `langdrift init --template support|ecommerce|scheduling|generic`
-- Run multi-iteration benchmarks, write markdown reports with per-locale failure tables
+- Run multiple iterations per locale with `--iterations N` and see aggregated pass rates
+- Run a full directory of scenario files in one command for a locale × scenario matrix view
+- Generate markdown matrix reports with `--format markdown`, suitable for PRs and QA review
+
+## Design choices
+
+- **Behavior over text.** LangDrift checks tool calls and structured behavior, not whether a reply sounds fluent.
+- **Deterministic assertions first.** The current harness avoids LLM-as-judge so failures are explainable and CI-friendly.
+- **HTTP contract over framework lock-in.** Any agent that can accept `POST { locale, input, scenarioId }` and return `{ text, toolCalls, structured }` can be tested.
+- **Small, inspectable core.** The CLI is zero-dependency TypeScript running directly on Node >= 24.
+- **Demo without API keys.** The fake agent makes the failure mode visible locally before anyone connects a real model.
+
+## Project status
+
+LangDrift is at v0.2: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, and locale × scenario markdown matrix reports are now part of the core CLI.
 
 ## Quick start
 
@@ -198,7 +190,7 @@ DOMAIN=ecommerce OPENAI_API_KEY=... pnpm agent
 Then run a scenario against it:
 
 ```bash
-node ./src/cli.ts run ./examples/scenarios/support-routing.yaml --target http://127.0.0.1:3010/api/agent
+langdrift run ./examples/scenarios/support-routing.yaml --target http://127.0.0.1:3010/api/agent
 ```
 
 ## Benchmark
@@ -238,19 +230,24 @@ LangDrift is zero-dependency TypeScript. Node runs `.ts` files directly (Node >=
 
 ```
 CLI (cli.ts)
-  → loadScenario (scenario.ts)       # parse YAML into Scenario type
-  → runScenario (runner.ts)          # iterate locales sequentially
+  → resolveScenarioPaths (runner.ts)   # file path or directory → [paths]
+  → runScenario (runner.ts)            # iterate locales × iterations, aggregate pass rates
       → executeHttpTarget (httpTarget.ts)  # POST {locale, input, scenarioId} to agent URL
       → assertExpectedToolCall (assertions.ts)  # deterministic checks
-  → formatTerminalReport (reportTerminal.ts)  # plain-text output
+  → runScenarios (runner.ts)           # multiple scenarios → MatrixResult
+  → formatTerminalReport / formatTerminalMatrixReport (reportTerminal.ts)
+  → formatJsonReport / formatJsonMatrixReport (reportJson.ts)
+  → formatMarkdownRunReport / formatMarkdownMatrixReport (reportMarkdown.ts)
 ```
 
 **CLI usage:**
 
 ```bash
 langdrift init [scenario.yaml] [--template support|ecommerce|scheduling|generic]
-langdrift run <scenario.yaml> --target <url> [--format text|json]
+langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown]
 ```
+
+Pass a directory to run all `.yaml` files in it and produce a locale × scenario matrix. `--iterations N` repeats each locale N times and reports aggregated pass rates.
 
 ## HTTP target contract
 
@@ -307,10 +304,7 @@ LangDrift makes a `POST` request to your agent for each locale in the scenario.
 
 Extra fields in the response body are ignored. Tool call items without a `name` string are silently dropped. The response status must be `2xx`; any non-2xx status is treated as a target error and fails all assertions for that locale.
 
-## Where this is going
+## More context
 
-The benchmark makes the problem concrete: multilingual agent quality needs behavior-level evals, not only translated UI strings. The immediate next step is the locale matrix: an aggregate view across scenarios and iterations that surfaces cross-language failure patterns as clearly as a CI report. After that, lower-friction integration for common agent frameworks and a basic CI gate.
-
-See [ROADMAP.md](ROADMAP.md) for the full plan.
-
-See [RESEARCH.md](RESEARCH.md) for the full investigation.
+- [RESEARCH.md](RESEARCH.md): full investigation, limitations, and supporting research.
+- [ROADMAP.md](ROADMAP.md): product direction and planned next steps.

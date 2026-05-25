@@ -17,7 +17,9 @@ export function parseScenario(source: string, path = "scenario"): Scenario {
   const lines = tokenize(source);
   const id = scalarAt(lines, 0, "id");
   const agent = scalarAt(lines, 0, "agent");
-  const localesIndex = lines.findIndex((line) => line.indent === 0 && line.key === "locales");
+  const localesIndex = lines.findIndex(
+    (line) => line.indent === 0 && line.key === "locales",
+  );
 
   if (!id) {
     throw new Error(`${path}: missing required field "id"`);
@@ -40,7 +42,10 @@ export function parseScenario(source: string, path = "scenario"): Scenario {
   return { id, agent, locales };
 }
 
-function parseLocales(lines: Line[], path: string): Record<string, ScenarioLocale> {
+function parseLocales(
+  lines: Line[],
+  path: string,
+): Record<string, ScenarioLocale> {
   const locales: Record<string, ScenarioLocale> = {};
 
   for (let index = 0; index < lines.length; index += 1) {
@@ -57,21 +62,38 @@ function parseLocales(lines: Line[], path: string): Record<string, ScenarioLocal
     const locale = line.key;
     const nextLocaleIndex = lines.findIndex(
       (candidate, candidateIndex) =>
-        candidateIndex > index && candidate.indent === 2 && candidate.value === "",
+        candidateIndex > index &&
+        candidate.indent === 2 &&
+        candidate.value === "",
     );
     const blockEnd = nextLocaleIndex === -1 ? lines.length : nextLocaleIndex;
     const block = lines.slice(index + 1, blockEnd);
     const input = scalarAt(block, 4, "input");
-    const toolName = nestedScalarAt(block, [4, 6, 8], ["expect", "toolCall", "name"]);
-    const toolArguments = nestedMapAt(block, [4, 6, 8], ["expect", "toolCall", "arguments"], 10);
-    const forbiddenToolName = nestedScalarAt(block, [4, 6, 8], ["expect", "noToolCall", "name"]);
+    const toolName = nestedScalarAt(
+      block,
+      [4, 6, 8],
+      ["expect", "toolCall", "name"],
+    );
+    const toolArguments = nestedMapAt(
+      block,
+      [4, 6, 8],
+      ["expect", "toolCall", "arguments"],
+      10,
+    );
+    const forbiddenToolName = nestedScalarAt(
+      block,
+      [4, 6, 8],
+      ["expect", "noToolCall", "name"],
+    );
 
     if (!input) {
       throw new Error(`${path}: locale "${locale}" is missing "input"`);
     }
 
     if (!toolName) {
-      throw new Error(`${path}: locale "${locale}" is missing "expect.toolCall.name"`);
+      throw new Error(
+        `${path}: locale "${locale}" is missing "expect.toolCall.name"`,
+      );
     }
 
     locales[locale] = {
@@ -79,9 +101,13 @@ function parseLocales(lines: Line[], path: string): Record<string, ScenarioLocal
       expect: {
         toolCall: {
           name: toolName,
-          ...(Object.keys(toolArguments).length > 0 ? { arguments: toolArguments } : {}),
+          ...(Object.keys(toolArguments).length > 0
+            ? { arguments: toolArguments }
+            : {}),
         },
-        ...(forbiddenToolName ? { noToolCall: { name: forbiddenToolName } } : {}),
+        ...(forbiddenToolName
+          ? { noToolCall: { name: forbiddenToolName } }
+          : {}),
       },
     };
 
@@ -114,18 +140,32 @@ function tokenize(source: string): Line[] {
     });
 }
 
-function scalarAt(lines: Line[], indent: number, key: string): string | undefined {
-  const line = lines.find((candidate) => candidate.indent === indent && candidate.key === key);
-  return line && line.value !== "" ? parseScalar(line.value, line.number) : undefined;
+function scalarAt(
+  lines: Line[],
+  indent: number,
+  key: string,
+): string | undefined {
+  const line = lines.find(
+    (candidate) => candidate.indent === indent && candidate.key === key,
+  );
+  return line && line.value !== ""
+    ? parseScalar(line.value, line.number)
+    : undefined;
 }
 
-function nestedScalarAt(lines: Line[], indents: number[], keys: string[]): string | undefined {
+function nestedScalarAt(
+  lines: Line[],
+  indents: number[],
+  keys: string[],
+): string | undefined {
   let start = 0;
 
   for (let index = 0; index < keys.length; index += 1) {
     const lineIndex = lines.findIndex(
       (line, candidateIndex) =>
-        candidateIndex >= start && line.indent === indents[index] && line.key === keys[index],
+        candidateIndex >= start &&
+        line.indent === indents[index] &&
+        line.key === keys[index],
     );
 
     if (lineIndex === -1) {
@@ -134,7 +174,9 @@ function nestedScalarAt(lines: Line[], indents: number[], keys: string[]): strin
 
     if (index === keys.length - 1) {
       const line = lines[lineIndex];
-      return line.value !== "" ? parseScalar(line.value, line.number) : undefined;
+      return line.value !== ""
+        ? parseScalar(line.value, line.number)
+        : undefined;
     }
 
     start = lineIndex + 1;
@@ -154,7 +196,9 @@ function nestedMapAt(
   for (let index = 0; index < keys.length; index += 1) {
     const lineIndex = lines.findIndex(
       (line, candidateIndex) =>
-        candidateIndex >= start && line.indent === indents[index] && line.key === keys[index],
+        candidateIndex >= start &&
+        line.indent === indents[index] &&
+        line.key === keys[index],
     );
 
     if (lineIndex === -1) {
@@ -186,7 +230,9 @@ function parseScalar(value: string, lineNumber: number): string {
     try {
       return JSON.parse(value);
     } catch {
-      throw new Error(`scenario line ${lineNumber}: invalid double-quoted string`);
+      throw new Error(
+        `scenario line ${lineNumber}: invalid double-quoted string`,
+      );
     }
   }
 

@@ -12,14 +12,17 @@ const iterations = Number.parseInt(process.env.ITERATIONS ?? "3", 10);
 const port = 3010;
 const target = `http://127.0.0.1:${port}/api/agent`;
 
-const apiKey =
-  process.env.MODEL_API_KEY ??
-  process.env.OPENAI_API_KEY ??
-  process.env.ANTHROPIC_API_KEY ??
-  process.env.DEEPSEEK_API_KEY;
+const PROVIDER_KEY_ENV: Record<string, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  "openai-compat": "OPENAI_API_KEY",
+  deepseek: "DEEPSEEK_API_KEY",
+};
+
+const apiKey = process.env[PROVIDER_KEY_ENV[provider] ?? ""];
 
 if (!apiKey) {
-  console.error("No API key found. Set MODEL_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or DEEPSEEK_API_KEY.");
+  const envVar = PROVIDER_KEY_ENV[provider] ?? "MODEL_API_KEY";
+  console.error(`No API key found for provider "${provider}". Set ${envVar}.`);
   process.exit(1);
 }
 
@@ -30,7 +33,6 @@ const server = spawn(process.execPath, ["./examples/agent/server.ts"], {
     DOMAIN: domain,
     MODEL_PROVIDER: provider,
     MODEL_NAME: modelName,
-    MODEL_API_KEY: apiKey,
   },
   stdio: ["ignore", "pipe", "pipe"],
 });
@@ -53,7 +55,11 @@ try {
 
   const report = renderReport(runs);
   const slug = basename(scenarioPath).replace(/\.yaml$/, "");
-  const outPath = `./examples/benchmark/results/${slug}.md`;
+  const modelSlug = modelName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+  const outDir = `./examples/benchmark/results/${modelSlug}`;
+  const { mkdir } = await import("node:fs/promises");
+  await mkdir(outDir, { recursive: true });
+  const outPath = `${outDir}/${slug}.md`;
   await writeFile(outPath, report);
   process.stdout.write(report);
   console.error(`\nResults written to ${outPath}`);

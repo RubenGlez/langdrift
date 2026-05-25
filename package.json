@@ -36,7 +36,8 @@
     "benchmark:support-cancel": "DOMAIN=support SCENARIO=./examples/scenarios/support-cancel-subscription.yaml node --env-file=.env ./examples/benchmark/run.ts",
     "benchmark:ecommerce-track": "DOMAIN=ecommerce SCENARIO=./examples/scenarios/ecommerce-track-order.yaml node --env-file=.env ./examples/benchmark/run.ts",
     "benchmark:scheduling-book": "DOMAIN=scheduling SCENARIO=./examples/scenarios/scheduling-book-new.yaml node --env-file=.env ./examples/benchmark/run.ts",
-    "benchmark:all": "ITERATIONS=10 pnpm benchmark:support && ITERATIONS=10 pnpm benchmark:support-cancel && ITERATIONS=10 pnpm benchmark:ecommerce && ITERATIONS=10 pnpm benchmark:ecommerce-track && ITERATIONS=10 pnpm benchmark:scheduling && ITERATIONS=10 pnpm benchmark:scheduling-book"
+    "benchmark:all": "ITERATIONS=10 pnpm benchmark:support && ITERATIONS=10 pnpm benchmark:support-cancel && ITERATIONS=10 pnpm benchmark:ecommerce && ITERATIONS=10 pnpm benchmark:ecommerce-track && ITERATIONS=10 pnpm benchmark:scheduling && ITERATIONS=10 pnpm benchmark:scheduling-book",
+    "benchmark:all:anthropic": "ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:support && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:support-cancel && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:ecommerce && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:ecommerce-track && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:scheduling && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:scheduling-book"
   },
   "engines": {
     "node": ">=24"

@@ -5,7 +5,13 @@ import { schedulingTools } from "./tools/scheduling.ts";
 import { supportTools } from "./tools/support.ts";
 
 type Domain = "support" | "ecommerce" | "scheduling";
-type Provider = "openai-compat" | "anthropic";
+type Provider = "openai-compat" | "deepseek" | "anthropic";
+
+const PROVIDER_KEY_ENV: Record<Provider, string> = {
+  "openai-compat": "OPENAI_API_KEY",
+  deepseek: "DEEPSEEK_API_KEY",
+  anthropic: "ANTHROPIC_API_KEY",
+};
 
 const domain = (process.env.DOMAIN ?? "support") as Domain;
 const provider = (process.env.MODEL_PROVIDER ?? "openai-compat") as Provider;
@@ -14,7 +20,7 @@ const port = Number.parseInt(process.env.PORT ?? "3010", 10);
 const host = "127.0.0.1";
 
 const apiUrl = process.env.MODEL_API_URL ?? defaultApiUrl(provider);
-const apiKey = process.env.MODEL_API_KEY ?? resolveApiKey(provider);
+const apiKey = resolveApiKey(provider);
 
 const tools = loadTools(domain);
 
@@ -61,7 +67,7 @@ server.listen(port, host, () => {
 });
 
 async function callModel(locale: string, input: string): Promise<{ text: string; toolCalls: Array<{ name: string; arguments: unknown }> }> {
-  if (provider === "openai-compat") {
+  if (provider === "openai-compat" || provider === "deepseek") {
     return callOpenAICompat(locale, input);
   }
 
@@ -202,12 +208,12 @@ function systemPromptRole(d: Domain): string {
 
 function defaultApiUrl(p: Provider): string {
   if (p === "anthropic") return "https://api.anthropic.com/v1/messages";
+  if (p === "deepseek") return "https://api.deepseek.com/v1/chat/completions";
   return "https://api.openai.com/v1/chat/completions";
 }
 
 function resolveApiKey(p: Provider): string {
-  if (p === "anthropic") return process.env.ANTHROPIC_API_KEY ?? "";
-  return process.env.OPENAI_API_KEY ?? process.env.MODEL_API_KEY ?? "";
+  return process.env[PROVIDER_KEY_ENV[p]] ?? "";
 }
 
 function sendJson(response: import("node:http").ServerResponse, status: number, body: unknown): void {

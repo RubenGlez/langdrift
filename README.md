@@ -27,6 +27,21 @@ This is an applied experiment, not scientific evidence. It uses one model, one a
 | scheduling-reschedule | 78% (28/36) | ar (2/3), zh (1/3), sw (3/3), cy (1/3), eu (1/3) |
 | scheduling-book-new | 92% (33/36) | zh (1/3), eu (1/3), mn (1/3) |
 
+**claude-haiku-4-5-20251001 — 10 iterations × 12 locales:**
+
+| Scenario | Pass rate | Failing locale checks |
+| -------- | --------- | --------------- |
+| support-routing | 59% (71/120) | mn (1/10), sw (3/10), yo (3/10), vi (4/10), cy (5/10), eu (5/10), zh (6/10) |
+| support-cancel-subscription | 68% (82/120) | yo (0/10), sw (1/10), mn (2/10), eu (4/10), cy (6/10) |
+| ecommerce-cancel-order | 69% (83/120) | yo (0/10), cy (1/10), eu (2/10), zh (6/10), mn (6/10) |
+| ecommerce-track-order | 46% (55/120) | mn (0/10), cy (1/10), eu (1/10), en (3/10), sw (4/10) |
+| scheduling-reschedule | 88% (106/120) | sw (4/10), eu (7/10), mn (8/10) |
+| scheduling-book-new | 40% (48/120) | id (0/10), sw (0/10), cy (0/10), fr (2/10), ar (4/10) |
+
+**`ecommerce-track-order` fails in English too (3/10)** — the only scenario where English isn't near-perfect. This is a haiku model quality issue on that specific scenario, not locale drift. It shows up regardless of language.
+
+All haiku failures are `no_tool_call` — the model often replies in text rather than using tools, especially for minority and low-resource languages. This contrasts with gpt-4o-mini which mostly fails on `wrong_argument`.
+
 **gpt-4o-mini — 10 iterations × 12 locales:**
 
 | Scenario | Pass rate | Failing locale checks |
@@ -38,9 +53,9 @@ This is an applied experiment, not scientific evidence. It uses one model, one a
 | scheduling-reschedule | 92% (110/120) | eu (10/10, no tool call) |
 | scheduling-book-new | 0% (0/120) | all locales — model behavior difference (see below) |
 
-English passed in every scenario on both models.
+English passed in every scenario on DeepSeek and gpt-4o-mini. claude-haiku-4-5-20251001 is the exception: English fails on `ecommerce-track-order` (3/10), which is a model quality issue on that scenario rather than locale drift.
 
-**Basque (`eu`) is a consistent weak spot for gpt-4o-mini**, failing deterministically across two scenarios even where other non-English locales pass cleanly. This pattern held on DeepSeek too, suggesting it is not model-specific.
+**Basque (`eu`) is a consistent weak spot across all three models**, failing in multiple scenarios on DeepSeek, gpt-4o-mini, and claude-haiku. It is not model-specific. **Yoruba (`yo`), Mongolian (`mn`), Welsh (`cy`), and Swahili (`sw`) are also persistent failure points**, particularly on haiku where low-resource languages frequently produce `no_tool_call` instead of a structured response.
 
 **`scheduling-book-new` at 0% is a model behavior difference, not locale drift.** The scenario expects the agent to check availability before booking. gpt-4o-mini interprets "I'd like to book my first appointment" as a direct booking request and calls `book_new_appointment` every time, in every language. DeepSeek took the more conservative `check_availability` path. Neither is strictly wrong — this is a scenario design question as much as a model quality question, and LangDrift surfaces it either way.
 
@@ -99,7 +114,7 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 
 ## Project status
 
-LangDrift is at v0.2: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, and locale × scenario markdown matrix reports are now part of the core CLI.
+LangDrift is at v0.2: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, and locale × scenario markdown matrix reports are now part of the core CLI. Benchmark results are included for three models: DeepSeek deepseek-chat, gpt-4o-mini, and claude-haiku-4-5-20251001.
 
 ## Quick start
 
@@ -193,8 +208,11 @@ OPENAI_API_KEY=... pnpm agent
 # Anthropic
 ANTHROPIC_API_KEY=... MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm agent
 
-# Any OpenAI-compatible API (DeepSeek, Together, etc.)
-MODEL_API_KEY=... MODEL_API_URL=https://api.deepseek.com/chat/completions MODEL_NAME=deepseek-chat pnpm agent
+# DeepSeek
+DEEPSEEK_API_KEY=... MODEL_PROVIDER=deepseek MODEL_NAME=deepseek-chat pnpm agent
+
+# Any other OpenAI-compatible API
+OPENAI_API_KEY=... MODEL_API_URL=https://api.together.xyz/v1/chat/completions MODEL_NAME=... pnpm agent
 
 # Choose domain: support (default), ecommerce, scheduling
 DOMAIN=ecommerce OPENAI_API_KEY=... pnpm agent
@@ -219,14 +237,11 @@ OPENAI_API_KEY=... pnpm benchmark:support-cancel
 OPENAI_API_KEY=... pnpm benchmark:ecommerce-track
 OPENAI_API_KEY=... pnpm benchmark:scheduling-book
 
-# Reproduce a checked-in report; swap the benchmark script for each scenario
-ITERATIONS=3 MODEL_API_KEY=... MODEL_API_URL=https://api.deepseek.com/chat/completions MODEL_NAME=deepseek-chat pnpm benchmark:support
-
 # Anthropic
 ANTHROPIC_API_KEY=... MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:support
 
-# Any OpenAI-compatible API
-MODEL_API_KEY=... MODEL_API_URL=https://api.example.com/chat/completions MODEL_NAME=model-name pnpm benchmark:support
+# DeepSeek
+DEEPSEEK_API_KEY=... MODEL_PROVIDER=deepseek MODEL_NAME=deepseek-chat pnpm benchmark:support
 ```
 
 **Included scenarios:**

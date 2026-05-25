@@ -155,16 +155,23 @@ function parseLocales(
       ["expect", "noToolCall", "name"],
     );
 
+    const responseLanguage = nestedScalarAt(
+      block,
+      [4, 6],
+      ["expect", "responseLanguage"],
+    );
+
     const hasToolCall = toolName || anyOfList.length > 0;
     const hasToolCalls = toolCallsList.length > 0;
+    const hasResponseLanguage = Boolean(responseLanguage);
 
     if (!input) {
       throw new Error(`${path}: locale "${locale}" is missing "input"`);
     }
 
-    if (!hasToolCall && !hasToolCalls) {
+    if (!hasToolCall && !hasToolCalls && !hasResponseLanguage) {
       throw new Error(
-        `${path}: locale "${locale}" is missing "expect.toolCall.name" or "expect.toolCalls"`,
+        `${path}: locale "${locale}" is missing at least one assertion (expect.toolCall, expect.toolCalls, or expect.responseLanguage)`,
       );
     }
 
@@ -188,6 +195,7 @@ function parseLocales(
         ...(forbiddenToolName
           ? { noToolCall: { name: forbiddenToolName } }
           : {}),
+        ...(responseLanguage ? { responseLanguage } : {}),
       },
     };
 

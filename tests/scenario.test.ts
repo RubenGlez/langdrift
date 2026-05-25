@@ -345,6 +345,158 @@ test("toolCalls sequence fails when steps are out of order", () => {
   });
 });
 
+test("responseLanguage passes when Japanese text is in ja locale", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: { name: "create_refund_ticket" },
+      responseLanguage: "ja",
+    },
+    {
+      text: "払い戻しの手続きを開始します。",
+      toolCalls: [{ name: "create_refund_ticket" }],
+      structured: null,
+    },
+  );
+  assert.equal(result.pass, true);
+  assert.equal(result.failureMode, null);
+});
+
+test("responseLanguage fails when English text is expected to be Japanese", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: { name: "create_refund_ticket" },
+      responseLanguage: "ja",
+    },
+    {
+      text: "I will start the refund process for you.",
+      toolCalls: [{ name: "create_refund_ticket" }],
+      structured: null,
+    },
+  );
+  assert.deepEqual(result, {
+    pass: false,
+    failureMode: "wrong_language",
+    detail: "expected ja script in response, got mostly other script",
+  });
+});
+
+test("responseLanguage passes when Latin-script response matches en locale", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: { name: "create_refund_ticket" },
+      responseLanguage: "en",
+    },
+    {
+      text: "I will process your refund now.",
+      toolCalls: [{ name: "create_refund_ticket" }],
+      structured: null,
+    },
+  );
+  assert.equal(result.pass, true);
+  assert.equal(result.failureMode, null);
+});
+
+test("responseLanguage fails when Japanese text is expected to be English", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: { name: "create_refund_ticket" },
+      responseLanguage: "en",
+    },
+    {
+      text: "払い戻しの手続きを開始します。",
+      toolCalls: [{ name: "create_refund_ticket" }],
+      structured: null,
+    },
+  );
+  assert.deepEqual(result, {
+    pass: false,
+    failureMode: "wrong_language",
+    detail: "expected Latin-script response (en), got mostly non-Latin characters",
+  });
+});
+
+test("responseLanguage passes when Arabic text matches ar locale", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: { name: "create_refund_ticket" },
+      responseLanguage: "ar",
+    },
+    {
+      text: "سأبدأ عملية استرداد الأموال الآن.",
+      toolCalls: [{ name: "create_refund_ticket" }],
+      structured: null,
+    },
+  );
+  assert.equal(result.pass, true);
+  assert.equal(result.failureMode, null);
+});
+
+test("responseLanguage can be the sole assertion", () => {
+  const result = assertExpectedToolCall(
+    { responseLanguage: "ru" },
+    {
+      text: "Я обработаю ваш возврат.",
+      toolCalls: [],
+      structured: null,
+    },
+  );
+  assert.deepEqual(result, {
+    pass: true,
+    failureMode: null,
+    detail: "responseLanguage: ru",
+  });
+});
+
+test("responseLanguage tool call failure surfaces before language check", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: { name: "create_refund_ticket" },
+      responseLanguage: "ja",
+    },
+    {
+      text: "払い戻しの手続きを開始します。",
+      toolCalls: [],
+      structured: null,
+    },
+  );
+  assert.deepEqual(result, {
+    pass: false,
+    failureMode: "no_tool_call",
+    detail: "expected create_refund_ticket, got no tool calls",
+  });
+});
+
+test("parses responseLanguage from YAML", () => {
+  const scenario = parseScenario(`
+id: multilingual_response
+agent: support
+
+locales:
+  ja:
+    input: 払い戻しを申請したいです
+    expect:
+      toolCall:
+        name: create_refund_ticket
+      responseLanguage: ja
+`);
+  assert.equal(scenario.locales.ja.expect.responseLanguage, "ja");
+});
+
+test("parses responseLanguage as sole assertion from YAML", () => {
+  const scenario = parseScenario(`
+id: language_check_only
+agent: support
+
+locales:
+  en:
+    input: Hello
+    expect:
+      responseLanguage: en
+`);
+  assert.equal(scenario.locales.en.expect.responseLanguage, "en");
+  assert.equal(scenario.locales.en.expect.toolCall, undefined);
+});
+
 test("parses anyOf from YAML and asserts correctly", () => {
   const scenario = parseScenario(`
 id: booking

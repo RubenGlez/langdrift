@@ -12,7 +12,7 @@ LangDrift starts as an experiment, but the product direction is broader: make mu
 
 ## Now
 
-Working on v0.6 Rich Assertions.
+Continuing v0.6 Rich Assertions. Next: JSON schema assertions for structured output or placeholder preservation checks.
 
 ## v0.1 Developer Loop
 
@@ -79,9 +79,9 @@ Current status: core complete.
 Goal: evaluate behavior beyond a single tool call.
 
 - Add JSON schema assertions for structured output.
-- Add response-language checks.
-- Support ordered tool-call sequences.
-- Support multiple valid tool calls for the same intent.
+- Add response-language checks. Done (`responseLanguage` assertion, Unicode script detection, no external deps).
+- Support ordered tool-call sequences. Done.
+- Support multiple valid tool calls for the same intent. Done.
 - Add placeholder preservation checks.
 - Add policy and safety-oriented assertions once the deterministic behavior assertions are stable.
 

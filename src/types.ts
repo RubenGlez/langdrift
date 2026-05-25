@@ -17,6 +17,7 @@ export type ScenarioLocale = {
     noToolCall?: {
       name: string;
     };
+    responseLanguage?: string; // BCP-47 locale code; checks response text is in that language
   };
 };
 
@@ -38,6 +39,7 @@ export type FailureMode =
   | "missing_argument"
   | "forbidden_tool"
   | "wrong_sequence"
+  | "wrong_language"
   | null;
 
 export type LocaleResult = {

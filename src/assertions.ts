@@ -5,6 +5,33 @@ import type {
   ToolCallAssertion,
 } from "./types.ts";
 
+// Maps BCP-47 base language tags to their primary non-Latin Unicode script range.
+// Languages not listed here are assumed to use a Latin-based script.
+const SCRIPT_PATTERNS: Record<string, RegExp> = {
+  ja: /[぀-ヿ一-鿿㐀-䶿]/,
+  zh: /[一-鿿㐀-䶿]/,
+  ko: /[가-힯]/,
+  ar: /[؀-ۿ]/,
+  fa: /[؀-ۿ]/,
+  ur: /[؀-ۿ]/,
+  ru: /[Ѐ-ӿ]/,
+  uk: /[Ѐ-ӿ]/,
+  bg: /[Ѐ-ӿ]/,
+  sr: /[Ѐ-ӿ]/,
+  hi: /[ऀ-ॿ]/,
+  mr: /[ऀ-ॿ]/,
+  bn: /[ঀ-৿]/,
+  th: /[฀-๿]/,
+  he: /[֐-׿]/,
+  el: /[Ͱ-Ͽ]/,
+  ka: /[Ⴀ-ჿ]/,
+  am: /[ሀ-፿]/,
+};
+
+// All non-Latin script ranges combined; used to detect unexpected non-Latin content in Latin-locale responses.
+const NON_LATIN_PATTERN =
+  /[Ͱ-ϿЀ-ӿ֐-׿؀-ۿऀ-৿฀-๿ᄀ-ᇿ぀-ヿ㐀-䶿一-鿿가-힯]/;
+
 type Pass = { pass: true; detail: string; failureMode: null };
 type Fail = {
   pass: false;
@@ -38,7 +65,14 @@ export function assertExpectedToolCall(
   if (expected.toolCalls && expected.toolCalls.length > 0) {
     const sequenceResult = assertToolCallSequence(expected.toolCalls, response);
     if (!sequenceResult.pass) return sequenceResult;
-    if (primaryResult === null) return sequenceResult;
+    if (primaryResult === null) primaryResult = sequenceResult;
+  }
+
+  // Language assertion: runs last so tool call failures surface first
+  if (expected.responseLanguage) {
+    const langResult = assertResponseLanguage(expected.responseLanguage, response.text);
+    if (!langResult.pass) return langResult;
+    if (primaryResult === null) return langResult;
   }
 
   return primaryResult ?? { pass: true, detail: "", failureMode: null };
@@ -136,6 +170,43 @@ function assertToolCallSequence(
 
   const detail = expected.map((e) => e.name).join(" → ");
   return { pass: true, detail, failureMode: null };
+}
+
+function assertResponseLanguage(
+  expectedLocale: string,
+  text: string,
+): AssertionResult {
+  const letters = [...text].filter((c) => /\p{L}/u.test(c));
+
+  if (letters.length === 0) {
+    return { pass: true, detail: `responseLanguage: ${expectedLocale}`, failureMode: null };
+  }
+
+  const base = expectedLocale.split("-")[0].toLowerCase();
+  const scriptPattern = SCRIPT_PATTERNS[base];
+
+  if (scriptPattern) {
+    const scriptCount = letters.filter((c) => scriptPattern.test(c)).length;
+    if (scriptCount / letters.length < 0.1) {
+      return {
+        pass: false,
+        failureMode: "wrong_language",
+        detail: `expected ${base} script in response, got mostly other script`,
+      };
+    }
+  } else {
+    // Latin-script locale: response should not be dominated by a non-Latin script
+    const nonLatinCount = letters.filter((c) => NON_LATIN_PATTERN.test(c)).length;
+    if (nonLatinCount / letters.length > 0.5) {
+      return {
+        pass: false,
+        failureMode: "wrong_language",
+        detail: `expected Latin-script response (${base}), got mostly non-Latin characters`,
+      };
+    }
+  }
+
+  return { pass: true, detail: `responseLanguage: ${expectedLocale}`, failureMode: null };
 }
 
 function assertForbiddenToolCall(

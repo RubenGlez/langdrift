@@ -138,19 +138,47 @@ function serializeExpect(
   locale: import("./types.ts").ScenarioLocale,
 ): string[] {
   const lines: string[] = [];
-  lines.push(`  toolCall:`);
-  lines.push(`    name: ${locale.expect.toolCall.name}`);
+  const { toolCall, toolCalls, noToolCall } = locale.expect;
 
-  if (locale.expect.toolCall.arguments) {
-    lines.push(`    arguments:`);
-    for (const [k, v] of Object.entries(locale.expect.toolCall.arguments)) {
-      lines.push(`      ${k}: ${v}`);
+  if (toolCall !== undefined && !Array.isArray(toolCall)) {
+    lines.push(`  toolCall:`);
+    lines.push(`    name: ${toolCall.name}`);
+    if (toolCall.arguments) {
+      lines.push(`    arguments:`);
+      for (const [k, v] of Object.entries(toolCall.arguments)) {
+        lines.push(`      ${k}: ${v}`);
+      }
+    }
+  } else if (Array.isArray(toolCall)) {
+    lines.push(`  toolCall:`);
+    lines.push(`    anyOf:`);
+    for (const option of toolCall) {
+      lines.push(`      - name: ${option.name}`);
+      if (option.arguments) {
+        lines.push(`        arguments:`);
+        for (const [k, v] of Object.entries(option.arguments)) {
+          lines.push(`          ${k}: ${v}`);
+        }
+      }
     }
   }
 
-  if (locale.expect.noToolCall) {
+  if (toolCalls && toolCalls.length > 0) {
+    lines.push(`  toolCalls:`);
+    for (const step of toolCalls) {
+      lines.push(`    - name: ${step.name}`);
+      if (step.arguments) {
+        lines.push(`      arguments:`);
+        for (const [k, v] of Object.entries(step.arguments)) {
+          lines.push(`        ${k}: ${v}`);
+        }
+      }
+    }
+  }
+
+  if (noToolCall) {
     lines.push(`  noToolCall:`);
-    lines.push(`    name: ${locale.expect.noToolCall.name}`);
+    lines.push(`    name: ${noToolCall.name}`);
   }
 
   return lines;

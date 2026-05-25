@@ -120,7 +120,7 @@ function renderReport(runs: BenchmarkRun[]): string {
   }
   const locales = Array.from(localeSet);
 
-  const failureModes = ["no_tool_call", "wrong_tool", "wrong_argument", "missing_argument", "forbidden_tool"] as const;
+  const failureModes = ["no_tool_call", "wrong_tool", "wrong_argument", "missing_argument", "forbidden_tool", "wrong_sequence"] as const;
 
   type LocaleStats = {
     passes: number;

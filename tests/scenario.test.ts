@@ -29,13 +29,10 @@ locales:
   assert.equal(scenario.id, "refund_request");
   assert.equal(scenario.agent, "support");
   assert.equal(scenario.locales.en.input, "I was charged twice.");
-  assert.equal(
-    scenario.locales.en.expect.toolCall.name,
-    "create_refund_ticket",
-  );
-  assert.deepEqual(scenario.locales.en.expect.toolCall.arguments, {
-    reason: "duplicate_charge",
-  });
+  const tc = scenario.locales.en.expect.toolCall;
+  assert.ok(!Array.isArray(tc) && tc !== undefined);
+  assert.equal(tc.name, "create_refund_ticket");
+  assert.deepEqual(tc.arguments, { reason: "duplicate_charge" });
   assert.equal(
     scenario.locales.en.expect.noToolCall?.name,
     "escalate_to_human",
@@ -188,16 +185,222 @@ test("passes when the expected tool call appears", () => {
   });
 });
 
+test("anyOf passes when the first option matches", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: [
+        { name: "check_availability" },
+        { name: "book_new_appointment" },
+      ],
+    },
+    { text: "", toolCalls: [{ name: "check_availability" }], structured: null },
+  );
+  assert.deepEqual(result, {
+    pass: true,
+    failureMode: null,
+    detail: "check_availability",
+  });
+});
+
+test("anyOf passes when the second option matches", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: [
+        { name: "check_availability" },
+        { name: "book_new_appointment" },
+      ],
+    },
+    {
+      text: "",
+      toolCalls: [{ name: "book_new_appointment" }],
+      structured: null,
+    },
+  );
+  assert.deepEqual(result, {
+    pass: true,
+    failureMode: null,
+    detail: "book_new_appointment",
+  });
+});
+
+test("anyOf fails when no option matches", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: [
+        { name: "check_availability" },
+        { name: "book_new_appointment" },
+      ],
+    },
+    { text: "", toolCalls: [{ name: "cancel_order" }], structured: null },
+  );
+  assert.deepEqual(result, {
+    pass: false,
+    failureMode: "wrong_tool",
+    detail:
+      "expected one of [check_availability | book_new_appointment], got cancel_order",
+  });
+});
+
+test("anyOf fails with no_tool_call when no tools called", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: [
+        { name: "check_availability" },
+        { name: "book_new_appointment" },
+      ],
+    },
+    { text: "Let me look into that.", toolCalls: [], structured: null },
+  );
+  assert.deepEqual(result, {
+    pass: false,
+    failureMode: "no_tool_call",
+    detail:
+      "expected one of [check_availability | book_new_appointment], got no tool calls",
+  });
+});
+
+test("toolCalls sequence passes when all steps appear in order", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCalls: [
+        { name: "check_availability" },
+        { name: "book_new_appointment" },
+      ],
+    },
+    {
+      text: "",
+      toolCalls: [
+        { name: "check_availability" },
+        { name: "book_new_appointment" },
+      ],
+      structured: null,
+    },
+  );
+  assert.deepEqual(result, {
+    pass: true,
+    failureMode: null,
+    detail: "check_availability → book_new_appointment",
+  });
+});
+
+test("toolCalls sequence passes with extra tool calls between steps", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCalls: [
+        { name: "check_availability" },
+        { name: "book_new_appointment" },
+      ],
+    },
+    {
+      text: "",
+      toolCalls: [
+        { name: "check_availability" },
+        { name: "get_user_preferences" },
+        { name: "book_new_appointment" },
+      ],
+      structured: null,
+    },
+  );
+  assert.equal(result.pass, true);
+});
+
+test("toolCalls sequence fails when a step is missing", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCalls: [
+        { name: "check_availability" },
+        { name: "book_new_appointment" },
+      ],
+    },
+    { text: "", toolCalls: [{ name: "check_availability" }], structured: null },
+  );
+  assert.deepEqual(result, {
+    pass: false,
+    failureMode: "wrong_sequence",
+    detail: "sequence incomplete, missing: book_new_appointment",
+  });
+});
+
+test("toolCalls sequence fails when steps are out of order", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCalls: [
+        { name: "check_availability" },
+        { name: "book_new_appointment" },
+      ],
+    },
+    {
+      text: "",
+      toolCalls: [
+        { name: "book_new_appointment" },
+        { name: "check_availability" },
+      ],
+      structured: null,
+    },
+  );
+  assert.deepEqual(result, {
+    pass: false,
+    failureMode: "wrong_sequence",
+    detail: "sequence incomplete, missing: book_new_appointment",
+  });
+});
+
+test("parses anyOf from YAML and asserts correctly", () => {
+  const scenario = parseScenario(`
+id: booking
+agent: scheduling
+
+locales:
+  en:
+    input: Book me a slot
+    expect:
+      toolCall:
+        anyOf:
+          - name: check_availability
+          - name: book_new_appointment
+            arguments:
+              slot: morning
+`);
+  const tc = scenario.locales.en.expect.toolCall;
+  assert.ok(Array.isArray(tc));
+  assert.equal(tc.length, 2);
+  assert.equal(tc[0].name, "check_availability");
+  assert.equal(tc[1].name, "book_new_appointment");
+  assert.deepEqual(tc[1].arguments, { slot: "morning" });
+});
+
+test("parses toolCalls sequence from YAML and asserts correctly", () => {
+  const scenario = parseScenario(`
+id: booking_flow
+agent: scheduling
+
+locales:
+  en:
+    input: Check and then book for me
+    expect:
+      toolCalls:
+        - name: check_availability
+        - name: book_new_appointment
+          arguments:
+            slot: morning
+`);
+  const tcs = scenario.locales.en.expect.toolCalls;
+  assert.ok(Array.isArray(tcs));
+  assert.equal(tcs?.length, 2);
+  assert.equal(tcs?.[0].name, "check_availability");
+  assert.equal(tcs?.[1].name, "book_new_appointment");
+  assert.deepEqual(tcs?.[1].arguments, { slot: "morning" });
+});
+
 test("starter scenario generated by init is parseable", () => {
   const scenario = parseScenario(starterScenario("support"));
 
   assert.equal(scenario.id, "refund_request");
   assert.equal(scenario.agent, "support");
   assert.deepEqual(Object.keys(scenario.locales), ["en", "fr"]);
-  assert.equal(
-    scenario.locales.en.expect.toolCall.name,
-    "create_refund_ticket",
-  );
+  const tc2 = scenario.locales.en.expect.toolCall;
+  assert.ok(!Array.isArray(tc2) && tc2 !== undefined);
+  assert.equal(tc2.name, "create_refund_ticket");
 });
 
 test("all init templates generate parseable scenarios", () => {
@@ -225,7 +428,9 @@ test("init writes the requested template", async () => {
   const scenario = parseScenario(await readFile(path, "utf8"));
   assert.equal(scenario.id, "cancel_order_request");
   assert.equal(scenario.agent, "ecommerce");
-  assert.equal(scenario.locales.en.expect.toolCall.name, "cancel_order");
+  const tc3 = scenario.locales.en.expect.toolCall;
+  assert.ok(!Array.isArray(tc3) && tc3 !== undefined);
+  assert.equal(tc3.name, "cancel_order");
 });
 
 test("formats a stable JSON run report with iteration counts", () => {

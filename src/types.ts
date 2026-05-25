@@ -4,13 +4,16 @@ export type Scenario = {
   locales: Record<string, ScenarioLocale>;
 };
 
+export type ToolCallAssertion = {
+  name: string;
+  arguments?: Record<string, string>;
+};
+
 export type ScenarioLocale = {
   input: string;
   expect: {
-    toolCall: {
-      name: string;
-      arguments?: Record<string, string>;
-    };
+    toolCall?: ToolCallAssertion | ToolCallAssertion[]; // single or anyOf
+    toolCalls?: ToolCallAssertion[]; // ordered sequence
     noToolCall?: {
       name: string;
     };
@@ -34,6 +37,7 @@ export type FailureMode =
   | "wrong_argument"
   | "missing_argument"
   | "forbidden_tool"
+  | "wrong_sequence"
   | null;
 
 export type LocaleResult = {

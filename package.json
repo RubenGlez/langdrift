@@ -2,6 +2,10 @@
   "name": "langdrift",
   "version": "0.2.0",
   "description": "Locale-aware eval harness for AI agent behavior",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RubenGlez/langdrift"
+  },
   "keywords": [
     "ai",
     "eval",

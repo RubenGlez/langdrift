@@ -1,6 +1,6 @@
 {
   "name": "langdrift",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Locale-aware eval harness for AI agent behavior",
   "repository": {
     "type": "git",

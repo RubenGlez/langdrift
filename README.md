@@ -87,15 +87,16 @@ The full benchmark results are in `examples/benchmark/results/`.
 
 LangDrift runs locale-specific scenarios against any HTTP agent and checks behavior, not just text. You write a YAML scenario with per-locale inputs and assertions. LangDrift calls your agent for each locale and reports pass/fail with failure mode classification.
 
-Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument`, `forbidden_tool`.
+Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument`, `forbidden_tool`, `wrong_sequence`, `wrong_language`.
 
 ## What works today
 
 - Load a YAML scenario with per-locale inputs and assertions
 - Call an HTTP agent target across multiple locales
-- Assert required tool call name
+- Assert required tool call name (single, `anyOf` list, or ordered `toolCalls` sequence)
 - Assert required shallow tool arguments
 - Assert forbidden tool calls did not happen
+- Assert the response text is in the expected language with `responseLanguage` (Unicode script detection, no external deps; works well for non-Latin scripts; Latin locales get a weaker "no dominant foreign script" check)
 - Report pass/fail with failure mode by locale in terminal output
 - Report the same run as stable JSON for CI and tooling
 - Exit non-zero on failure (CI-ready)
@@ -117,7 +118,7 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 
 ## Project status
 
-LangDrift is at v0.5: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, locale × scenario markdown matrix reports, CI gate flags, scenario linting, LLM-assisted locale generation, and integration docs are all part of the core CLI. Benchmark results are included for three models: DeepSeek deepseek-chat, gpt-4o-mini, and claude-haiku-4-5-20251001.
+LangDrift is at v0.6: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, locale × scenario markdown matrix reports, CI gate flags, scenario linting, LLM-assisted locale generation, and integration docs are all part of the core CLI. Assertions now include `anyOf` alternatives, ordered `toolCalls` sequences, and `responseLanguage` script checks. Benchmark results are included for three models: DeepSeek deepseek-chat, gpt-4o-mini, and claude-haiku-4-5-20251001.
 
 ## Quick start
 
@@ -177,7 +178,10 @@ locales:
         name: create_refund_ticket
         arguments:
           reason: duplicate_charge
+      responseLanguage: fr
 ```
+
+`responseLanguage` checks that the agent's text reply is in the expected language using Unicode script detection. Useful for catching agents that always respond in English regardless of the input locale.
 
 **2. Point it at your agent:**
 

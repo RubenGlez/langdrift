@@ -25,6 +25,7 @@
     "src/",
     "docs/",
     "examples/scenarios/",
+    "examples/benchmark/results/",
     "RESEARCH.md",
     "ROADMAP.md",
     "LICENSE"

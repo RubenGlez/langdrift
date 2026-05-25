@@ -29,8 +29,7 @@ const SCRIPT_PATTERNS: Record<string, RegExp> = {
 };
 
 // All non-Latin script ranges combined; used to detect unexpected non-Latin content in Latin-locale responses.
-const NON_LATIN_PATTERN =
-  /[Ͱ-ϿЀ-ӿ֐-׿؀-ۿऀ-৿฀-๿ᄀ-ᇿ぀-ヿ㐀-䶿一-鿿가-힯]/;
+const NON_LATIN_PATTERN = /[Ͱ-ϿЀ-ӿ֐-׿؀-ۿऀ-৿฀-๿ᄀ-ᇿ぀-ヿ㐀-䶿一-鿿가-힯]/;
 
 type Pass = { pass: true; detail: string; failureMode: null };
 type Fail = {
@@ -70,7 +69,10 @@ export function assertExpectedToolCall(
 
   // Language assertion: runs last so tool call failures surface first
   if (expected.responseLanguage) {
-    const langResult = assertResponseLanguage(expected.responseLanguage, response.text);
+    const langResult = assertResponseLanguage(
+      expected.responseLanguage,
+      response.text,
+    );
     if (!langResult.pass) return langResult;
     if (primaryResult === null) return langResult;
   }
@@ -179,7 +181,11 @@ function assertResponseLanguage(
   const letters = [...text].filter((c) => /\p{L}/u.test(c));
 
   if (letters.length === 0) {
-    return { pass: true, detail: `responseLanguage: ${expectedLocale}`, failureMode: null };
+    return {
+      pass: true,
+      detail: `responseLanguage: ${expectedLocale}`,
+      failureMode: null,
+    };
   }
 
   const base = expectedLocale.split("-")[0].toLowerCase();
@@ -196,7 +202,9 @@ function assertResponseLanguage(
     }
   } else {
     // Latin-script locale: response should not be dominated by a non-Latin script
-    const nonLatinCount = letters.filter((c) => NON_LATIN_PATTERN.test(c)).length;
+    const nonLatinCount = letters.filter((c) =>
+      NON_LATIN_PATTERN.test(c),
+    ).length;
     if (nonLatinCount / letters.length > 0.5) {
       return {
         pass: false,
@@ -206,7 +214,11 @@ function assertResponseLanguage(
     }
   }
 
-  return { pass: true, detail: `responseLanguage: ${expectedLocale}`, failureMode: null };
+  return {
+    pass: true,
+    detail: `responseLanguage: ${expectedLocale}`,
+    failureMode: null,
+  };
 }
 
 function assertForbiddenToolCall(

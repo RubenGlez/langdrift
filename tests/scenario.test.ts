@@ -411,7 +411,8 @@ test("responseLanguage fails when Japanese text is expected to be English", () =
   assert.deepEqual(result, {
     pass: false,
     failureMode: "wrong_language",
-    detail: "expected Latin-script response (en), got mostly non-Latin characters",
+    detail:
+      "expected Latin-script response (en), got mostly non-Latin characters",
   });
 });
 

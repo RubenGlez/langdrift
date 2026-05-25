@@ -90,7 +90,9 @@ async function callLlm(
   const apiUrl = options.apiUrl ?? "https://api.openai.com/v1/chat/completions";
   const model = options.model ?? "gpt-4o-mini";
 
-  const prompt = `You are a localization expert. Given an English customer service message and a list of target locales, produce natural-sounding equivalent phrasings that preserve the original intent and sound like something a real customer would write — not a formal translation.
+  const prompt = `You are a localization expert. Given an English user message for an AI agent workflow and a list of target locales, produce natural-sounding equivalent phrasings that preserve the original intent, constraints, entities, and requested action.
+
+The result should sound like something a real user would write in that locale — not a literal or formal translation. Do not add new details, remove requirements, soften urgency, or change what the user is asking the agent to do.
 
 Return ONLY a JSON object mapping BCP 47 locale codes to translated inputs. No explanation, no markdown.
 

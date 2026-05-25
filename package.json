@@ -1,8 +1,13 @@
 {
   "name": "langdrift",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Locale-aware eval harness for AI agent behavior",
+  "keywords": ["ai", "eval", "localization", "testing", "agents", "llm", "multilingual"],
+  "license": "MIT",
   "type": "module",
+  "files": [
+    "src/"
+  ],
   "bin": {
     "langdrift": "./src/cli.ts"
   },

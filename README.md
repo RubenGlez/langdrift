@@ -98,9 +98,17 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 
 ## Quick start
 
+**Install:**
+
+```bash
+npm install -g langdrift
+```
+
+Requires Node >= 24 (LangDrift runs TypeScript directly via Node's built-in type stripping).
+
 **Try the no-key demo:**
 
-In one terminal:
+Clone this repo, then in one terminal:
 
 ```bash
 pnpm fake-agent
@@ -109,7 +117,7 @@ pnpm fake-agent
 In another terminal:
 
 ```bash
-node ./src/cli.ts run ./examples/scenarios/support-routing.yaml --target http://127.0.0.1:3011/api/agent
+langdrift run ./examples/scenarios/support-routing.yaml --target http://127.0.0.1:3011/api/agent
 ```
 
 The fake agent intentionally drops tool calls for a couple of locales, so the run shows the core LangDrift failure mode without calling any model provider.
@@ -119,7 +127,7 @@ Expected result: the run exits non-zero and reports `2 of 12 locales failed`.
 **1. Create a starter scenario:**
 
 ```bash
-node ./src/cli.ts init ./my-scenario.yaml --template support
+langdrift init ./my-scenario.yaml --template support
 ```
 
 Then edit the generated YAML:
@@ -150,18 +158,18 @@ locales:
 
 **2. Point it at your agent:**
 
-Your agent needs to accept `POST /api/agent` with `{ locale, input, scenarioId }` and respond with `{ text, toolCalls, structured }`.
+Your agent needs to accept `POST /api/agent` with `{ locale, input, scenarioId }` and respond with `{ text, toolCalls, structured }`. See [HTTP target contract](#http-target-contract) below.
 
 **3. Run:**
 
 ```bash
-node ./src/cli.ts run ./my-scenario.yaml --target http://127.0.0.1:3010/api/agent
+langdrift run ./my-scenario.yaml --target http://127.0.0.1:3010/api/agent
 ```
 
 For CI or downstream tooling, emit JSON:
 
 ```bash
-node ./src/cli.ts run ./my-scenario.yaml --target http://127.0.0.1:3010/api/agent --format json
+langdrift run ./my-scenario.yaml --target http://127.0.0.1:3010/api/agent --format json
 ```
 
 ## Example agent
@@ -237,14 +245,67 @@ CLI (cli.ts)
   → formatTerminalReport (reportTerminal.ts)  # plain-text output
 ```
 
-**HTTP contract:** LangDrift POSTs `{ locale, input, scenarioId }` to the target. The agent responds with `{ text, toolCalls, structured }`. Missing fields normalize to `""`, `[]`, `null`.
-
 **CLI usage:**
 
 ```bash
 langdrift init [scenario.yaml] [--template support|ecommerce|scheduling|generic]
 langdrift run <scenario.yaml> --target <url> [--format text|json]
 ```
+
+## HTTP target contract
+
+LangDrift makes a `POST` request to your agent for each locale in the scenario.
+
+**Request** (`Content-Type: application/json`):
+
+```json
+{
+  "locale": "fr",
+  "input": "J'ai été facturé deux fois. Pouvez-vous me rembourser un paiement?",
+  "scenarioId": "refund_request"
+}
+```
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `locale` | string | BCP 47 locale tag from the scenario (e.g. `en`, `fr`, `zh`) |
+| `input` | string | The user message for this locale |
+| `scenarioId` | string | The `id` field from the scenario YAML |
+
+**Response** (`Content-Type: application/json`):
+
+```json
+{
+  "text": "I can help you with that refund.",
+  "toolCalls": [
+    {
+      "name": "create_refund_ticket",
+      "arguments": {
+        "reason": "duplicate_charge"
+      }
+    }
+  ],
+  "structured": null
+}
+```
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `text` | string | The agent's text reply. Can be empty. Missing defaults to `""`. |
+| `toolCalls` | array | Tool calls the agent made. Each item must have `name` (string). `arguments` is optional. Missing defaults to `[]`. |
+| `structured` | any | Optional structured output for schema assertions. Missing defaults to `null`. |
+
+**No-tool-call response** (agent replied in text only):
+
+```json
+{
+  "text": "I'm not sure how to help with that.",
+  "toolCalls": [],
+  "structured": null
+}
+```
+
+Extra fields in the response body are ignored. Tool call items without a `name` string are silently dropped. The response status must be `2xx`; any non-2xx status is treated as a target error and fails all assertions for that locale.
 
 ## Where this is going
 

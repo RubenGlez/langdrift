@@ -1,5 +1,8 @@
 # LangDrift
 
+[![npm version](https://img.shields.io/npm/v/langdrift)](https://www.npmjs.com/package/langdrift)
+[![node](https://img.shields.io/node/v/langdrift)](https://www.npmjs.com/package/langdrift)
+
 Locale-aware evals for AI agent behavior.
 
 LangDrift checks whether an AI agent preserves behavior across languages: tool selection, tool arguments, response language, and failure modes. It is built for teams who already test their agent in English and want to know what changes when the same intent arrives in French, Arabic, Chinese, Basque, Swahili, or any other locale.
@@ -10,8 +13,9 @@ The core question:
 
 ## See It In 30 Seconds
 
+**No API key required.** Clone the repo, start the fake agent, and run a scenario:
+
 ```bash
-npm install -g langdrift
 git clone https://github.com/RubenGlez/langdrift.git
 cd langdrift
 pnpm install
@@ -21,7 +25,14 @@ pnpm fake-agent
 In another terminal:
 
 ```bash
-langdrift run ./examples/scenarios/support-routing.yaml --target http://127.0.0.1:3011/api/agent
+node ./src/cli.ts run ./examples/scenarios/support-routing.yaml --target http://127.0.0.1:3011/api/agent
+```
+
+**Testing your own agent?** Install globally and point it at your endpoint:
+
+```bash
+npm install -g langdrift
+langdrift run ./my-scenario.yaml --target http://localhost:3010/api/agent
 ```
 
 The fake agent intentionally drops tool calls for Swahili (`sw`) and Chinese (`zh`), so the demo shows the core failure mode without using an API key:
@@ -63,7 +74,7 @@ Failure modes include `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_a
 npm install -g langdrift
 ```
 
-Requires Node >= 24. LangDrift runs TypeScript directly through Node's native type stripping, so there is no build step.
+Requires Node >= 24. LangDrift runs TypeScript directly via Node's native type stripping, so there is no build step. Node 22.6+ also works if you pass `--experimental-strip-types` when invoking the CLI directly, but the global install expects Node 24.
 
 ## Quick Start
 

@@ -4,6 +4,35 @@ A locale-aware eval harness for AI agent behavior.
 
 LangDrift is a research-backed developer tool prototype. It starts with a question, tests it in a small reproducible setup, and turns the result into a CLI that agent teams can point at their own systems.
 
+It answers a practical question: does your agent still choose the right tool when the same user intent arrives in another language?
+
+## See it in 30 seconds
+
+```bash
+npm install -g langdrift
+git clone https://github.com/RubenGlez/langdrift.git
+cd langdrift
+pnpm install
+pnpm fake-agent
+```
+
+In another terminal:
+
+```bash
+langdrift run ./examples/scenarios/support-routing.yaml --target http://127.0.0.1:3011/api/agent
+```
+
+The fake agent intentionally drops tool calls for Swahili (`sw`) and Chinese (`zh`), so the demo shows the core failure mode without using an API key:
+
+```text
+Locale  Passed  Failure       Detail
+en      1/1     -             create_refund_ticket
+sw      0/1     no_tool_call  expected create_refund_ticket, got no tool calls
+zh      0/1     no_tool_call  expected create_refund_ticket, got no tool calls
+
+Result: failed, 2 of 12 locales failed
+```
+
 ## The thesis
 
 AI localization is moving from translated strings to localized behavior. When you build an AI agent, you're not just rendering UI text in multiple languages: your agent interprets intent, selects tools, and produces structured output. Those behaviors can drift silently across languages while your translation coverage looks fine.
@@ -118,7 +147,7 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 
 ## Project status
 
-LangDrift is at v0.6: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, locale × scenario markdown matrix reports, CI gate flags, scenario linting, LLM-assisted locale generation, and integration docs are all part of the core CLI. Assertions now include `anyOf` alternatives, ordered `toolCalls` sequences, and `responseLanguage` script checks. Benchmark results are included for three models: DeepSeek deepseek-chat, gpt-4o-mini, and claude-haiku-4-5-20251001.
+LangDrift is an early public prototype on the `0.2.x` release line. The working feature set includes the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports. Multi-iteration runs, directory-level multi-scenario execution, locale × scenario markdown matrix reports, CI gate flags, scenario linting, LLM-assisted locale generation, and integration docs are all part of the core CLI. Assertions include `anyOf` alternatives, ordered `toolCalls` sequences, and `responseLanguage` script checks. Benchmark results are included for three models: DeepSeek deepseek-chat, gpt-4o-mini, and claude-haiku-4-5-20251001.
 
 ## Quick start
 

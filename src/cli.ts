@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import { INIT_TEMPLATES, initScenario, isInitTemplate } from "./init.ts";
 import { loadScenario } from "./scenario.ts";
 import { resolveScenarioPaths, runScenario, runScenarios } from "./runner.ts";
@@ -45,7 +46,19 @@ type TranslateOptions = {
 };
 
 async function main(): Promise<void> {
-  const options = parseArgs(process.argv.slice(2));
+  const args = process.argv.slice(2);
+
+  if (args.includes("--help") || args.includes("-h")) {
+    process.stdout.write(`${usage()}\n`);
+    return;
+  }
+
+  if (args.includes("--version") || args.includes("-v")) {
+    process.stdout.write(`${readPackageVersion()}\n`);
+    return;
+  }
+
+  const options = parseArgs(args);
 
   if (options.command === "init") {
     const path = await initScenario(options.path, options.template);
@@ -263,6 +276,17 @@ function usage(): string {
     "  langdrift lint <scenario.yaml|dir>",
     "  langdrift translate <scenario.yaml> [--locales fr,ar,zh,...] [--write]",
   ].join("\n");
+}
+
+function readPackageVersion(): string {
+  const packageJsonUrl = new URL("../package.json", import.meta.url);
+  const packageJson = JSON.parse(readFileSync(packageJsonUrl, "utf8")) as {
+    version?: unknown;
+  };
+
+  return typeof packageJson.version === "string"
+    ? packageJson.version
+    : "unknown";
 }
 
 main().catch((error: unknown) => {

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import test from "node:test";
 import type { LocaleResult } from "../src/types.ts";
 
@@ -80,4 +81,20 @@ test("min-pass-rate at exactly threshold boundary passes", () => {
 
 test("min-pass-rate just below threshold fails", () => {
   assert.equal(shouldFail([makeResult("fr", 7, 10)], 80, []), true);
+});
+
+test("CLI prints help", () => {
+  const output = execFileSync("node", ["./src/cli.ts", "--help"], {
+    encoding: "utf8",
+  });
+
+  assert.match(output, /langdrift run <scenario\.yaml\|dir>/);
+});
+
+test("CLI prints package version", () => {
+  const output = execFileSync("node", ["./src/cli.ts", "--version"], {
+    encoding: "utf8",
+  });
+
+  assert.match(output.trim(), /^\d+\.\d+\.\d+$/);
 });

@@ -6,6 +6,10 @@
     "type": "git",
     "url": "https://github.com/RubenGlez/langdrift"
   },
+  "homepage": "https://github.com/RubenGlez/langdrift#readme",
+  "bugs": {
+    "url": "https://github.com/RubenGlez/langdrift/issues"
+  },
   "keywords": [
     "ai",
     "eval",
@@ -18,7 +22,12 @@
   "license": "MIT",
   "type": "module",
   "files": [
-    "src/"
+    "src/",
+    "docs/",
+    "examples/scenarios/",
+    "RESEARCH.md",
+    "ROADMAP.md",
+    "LICENSE"
   ],
   "bin": {
     "langdrift": "./src/cli.ts"

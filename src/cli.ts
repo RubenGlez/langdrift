@@ -20,6 +20,8 @@ type RunOptions = {
   target: string;
   iterations: number;
   format: "text" | "json" | "markdown";
+  minPassRate: number | null;
+  allowFail: string[];
 };
 
 type InitOptions = {
@@ -60,10 +62,8 @@ async function main(): Promise<void> {
       process.stdout.write(formatTerminalMatrixReport(matrix));
     }
 
-    const anyFailed = matrix.runs.some((run) =>
-      run.results.some((r) => r.status === "fail"),
-    );
-    if (anyFailed) {
+    const allResults = matrix.runs.flatMap((run) => run.results);
+    if (shouldFail(allResults, options.minPassRate, options.allowFail)) {
       process.exitCode = 1;
     }
   } else {
@@ -78,10 +78,27 @@ async function main(): Promise<void> {
       process.stdout.write(formatTerminalReport(run));
     }
 
-    if (run.results.some((result) => result.status === "fail")) {
+    if (shouldFail(run.results, options.minPassRate, options.allowFail)) {
       process.exitCode = 1;
     }
   }
+}
+
+function shouldFail(
+  results: import("./types.ts").LocaleResult[],
+  minPassRate: number | null,
+  allowFail: string[],
+): boolean {
+  const counted = results.filter((r) => !allowFail.includes(r.locale));
+
+  if (minPassRate !== null) {
+    const totalChecks = counted.reduce((sum, r) => sum + r.total, 0);
+    const totalPassed = counted.reduce((sum, r) => sum + r.passed, 0);
+    const rate = totalChecks === 0 ? 100 : (totalPassed / totalChecks) * 100;
+    return rate < minPassRate;
+  }
+
+  return counted.some((r) => r.status === "fail");
 }
 
 function parseArgs(args: string[]): CliOptions {
@@ -112,13 +129,31 @@ function parseArgs(args: string[]): CliOptions {
     iterationsFlagIndex === -1 ? "1" : args[iterationsFlagIndex + 1];
   const iterations = Number(iterationsRaw);
 
+  const minPassRateIndex = args.indexOf("--min-pass-rate");
+  const minPassRateRaw =
+    minPassRateIndex === -1 ? null : args[minPassRateIndex + 1];
+  const minPassRate = minPassRateRaw === null ? null : Number(minPassRateRaw);
+
+  const allowFail: string[] = [];
+  for (let i = 0; i < args.length; i += 1) {
+    if (
+      args[i] === "--allow-fail" &&
+      args[i + 1] &&
+      !args[i + 1].startsWith("--")
+    ) {
+      allowFail.push(args[i + 1]);
+    }
+  }
+
   if (
     !scenarioPath ||
     scenarioPath.startsWith("--") ||
     !target ||
     (format !== "text" && format !== "json" && format !== "markdown") ||
     !Number.isInteger(iterations) ||
-    iterations < 1
+    iterations < 1 ||
+    (minPassRate !== null &&
+      (Number.isNaN(minPassRate) || minPassRate < 0 || minPassRate > 100))
   ) {
     throw new Error(usage());
   }
@@ -129,6 +164,8 @@ function parseArgs(args: string[]): CliOptions {
     target,
     iterations,
     format,
+    minPassRate,
+    allowFail,
   };
 }
 
@@ -151,7 +188,7 @@ function usage(): string {
   return [
     "Usage:",
     `  langdrift init [scenario.yaml] [--template ${INIT_TEMPLATES.join("|")}]`,
-    "  langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown]",
+    "  langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown] [--min-pass-rate N] [--allow-fail <locale>]",
   ].join("\n");
 }
 

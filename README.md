@@ -103,6 +103,7 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 - Run multiple iterations per locale with `--iterations N` and see aggregated pass rates
 - Run a full directory of scenario files in one command for a locale × scenario matrix view
 - Generate markdown matrix reports with `--format markdown`, suitable for PRs and QA review
+- Gate CI with `--min-pass-rate N` (exit non-zero below N% pass rate) and `--allow-fail <locale>` (exclude known-failing locales from exit code)
 
 ## Design choices
 
@@ -114,7 +115,7 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 
 ## Project status
 
-LangDrift is at v0.2: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, and locale × scenario markdown matrix reports are now part of the core CLI. Benchmark results are included for three models: DeepSeek deepseek-chat, gpt-4o-mini, and claude-haiku-4-5-20251001.
+LangDrift is at v0.3: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, locale × scenario markdown matrix reports, CI gate flags, and integration docs are all part of the core CLI. Benchmark results are included for three models: DeepSeek deepseek-chat, gpt-4o-mini, and claude-haiku-4-5-20251001.
 
 ## Quick start
 
@@ -272,10 +273,10 @@ CLI (cli.ts)
 
 ```bash
 langdrift init [scenario.yaml] [--template support|ecommerce|scheduling|generic]
-langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown]
+langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown] [--min-pass-rate N] [--allow-fail <locale>]
 ```
 
-Pass a directory to run all `.yaml` files in it and produce a locale × scenario matrix. `--iterations N` repeats each locale N times and reports aggregated pass rates.
+Pass a directory to run all `.yaml` files in it and produce a locale × scenario matrix. `--iterations N` repeats each locale N times and reports aggregated pass rates. `--min-pass-rate N` exits non-zero only if the overall pass rate falls below N%. `--allow-fail <locale>` excludes a locale from the exit code (repeatable). See [CI integration](docs/ci.md) for GitHub Actions examples.
 
 ## HTTP target contract
 

@@ -12,11 +12,7 @@ LangDrift starts as an experiment, but the product direction is broader: make mu
 
 ## Now
 
-One thing remaining:
-
-1. **Strengthen the experiment.** Re-run all six scenarios with an OpenAI model and increase iterations from 3 to at least 10. This is the credibility foundation: without it, the benchmark results are interesting but easy to dismiss. See the Research Backlog for specifics.
-
-The locale matrix (v0.2) is done. The experiment re-run is the remaining blocker before moving on.
+Working on v0.5 Scenario Quality and Authoring.
 
 ## v0.1 Developer Loop
 
@@ -49,18 +45,22 @@ Current status: core complete.
 
 Goal: make it easy to plug any existing agent into LangDrift with minimal code changes. Adoption dies at integration cost; this comes before CI features.
 
-- Add minimal integration examples for common HTTP agent shapes.
-- Document adapter examples for OpenAI-style tool calls, Vercel AI SDK, LangChain/LangGraph, and plain Express/Fastify handlers.
-- Make the HTTP contract feel like a thin wrapper, not a rewrite.
+Current status: complete.
+
+- Add minimal integration examples for common HTTP agent shapes. Done.
+- Document adapter examples for OpenAI-style tool calls, Vercel AI SDK, LangChain/LangGraph, and plain Express/Fastify handlers. Done (`docs/integrations.md`).
+- Make the HTTP contract feel like a thin wrapper, not a rewrite. Done.
 
 ## v0.4 CI Gate
 
 Goal: let teams block regressions without making every existing locale failure fatal forever. Keep it simple: threshold and a GitHub Actions example, nothing more.
 
-- Add threshold-based exits: minimum pass rate or required locales must pass.
-- Support a known-failure allowlist so teams can accept specific locale failures explicitly.
-- Provide a GitHub Actions example.
-- Emit a PR-friendly summary alongside the JSON artifact.
+Current status: complete.
+
+- Add threshold-based exits: `--min-pass-rate N`. Done.
+- Support a known-failure allowlist: `--allow-fail <locale>` (repeatable). Done.
+- Provide a GitHub Actions example. Done (`docs/ci.md`).
+- Emit a PR-friendly summary alongside the JSON artifact. Done (`--format markdown` writes to `$GITHUB_STEP_SUMMARY`).
 
 ## v0.5 Scenario Quality and Authoring
 
@@ -95,8 +95,8 @@ Goal: evaluate behavior beyond a single tool call.
 
 These items strengthen the study and the public narrative. They are not product features; they improve the credibility and reach of the underlying experiment.
 
-- Re-run all six scenarios with an OpenAI model (gpt-4o-mini is cheap enough) and compare pass rates side by side. This is the single most important credibility improvement: if similar patterns appear on a different model, the finding is less likely to be only deepseek-chat-specific.
-- Increase iterations per locale from 3 to at least 10. This makes the pass rate numbers meaningful and reduces the chance that any individual result is noise.
+- ~~Re-run all six scenarios with an OpenAI model and compare pass rates side by side.~~ Done: gpt-4o-mini and claude-haiku-4-5-20251001 at 10 iterations each.
+- ~~Increase iterations per locale from 3 to at least 10.~~ Done for gpt-4o-mini and claude-haiku.
 - Preserve raw failed responses in the benchmark output so readers can see what the model actually returned instead of calling a tool.
 - Locale prompt authoring without native review is acknowledged as a limitation in `RESEARCH.md`. It is deferred: native review at scale is not practical for a solo project. The limitation is documented; it should be disclosed wherever the results are shared.
 - Make the wording explicit everywhere that the experiment does not rank languages and makes no universal claims about model capability.

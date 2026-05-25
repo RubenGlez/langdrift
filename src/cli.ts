@@ -11,8 +11,10 @@ import {
   formatMarkdownMatrixReport,
   formatMarkdownRunReport,
 } from "./reportMarkdown.ts";
+import { formatLintReport, lintScenarios } from "./lint.ts";
+import { DEFAULT_LOCALES, translateScenario } from "./translate.ts";
 
-type CliOptions = RunOptions | InitOptions;
+type CliOptions = RunOptions | InitOptions | LintOptions | TranslateOptions;
 
 type RunOptions = {
   command: "run";
@@ -30,12 +32,58 @@ type InitOptions = {
   template: "support" | "ecommerce" | "scheduling" | "generic";
 };
 
+type LintOptions = {
+  command: "lint";
+  scenarioPath: string;
+};
+
+type TranslateOptions = {
+  command: "translate";
+  scenarioPath: string;
+  locales: string[];
+  write: boolean;
+};
+
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
 
   if (options.command === "init") {
     const path = await initScenario(options.path, options.template);
     process.stdout.write(`Created ${path}\n`);
+    return;
+  }
+
+  if (options.command === "lint") {
+    const paths = await resolveScenarioPaths(options.scenarioPath);
+    if (paths.length === 0) {
+      throw new Error(`No scenario files found at ${options.scenarioPath}`);
+    }
+    const results = await lintScenarios(paths);
+    process.stdout.write(formatLintReport(results));
+    const hasErrors = results.some((r) =>
+      r.issues.some((i) => i.severity === "error"),
+    );
+    if (hasErrors) process.exitCode = 1;
+    return;
+  }
+
+  if (options.command === "translate") {
+    const apiKey = process.env.OPENAI_API_KEY ?? "";
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY is required for the translate command");
+    }
+    const { yamlSnippet } = await translateScenario(options.scenarioPath, {
+      locales: options.locales,
+      apiKey,
+      write: options.write,
+    });
+    if (options.write) {
+      process.stdout.write(
+        `Locale inputs appended to ${options.scenarioPath}\n`,
+      );
+    } else {
+      process.stdout.write(yamlSnippet);
+    }
     return;
   }
 
@@ -115,6 +163,29 @@ function parseArgs(args: string[]): CliOptions {
     return { command: "init", path, template };
   }
 
+  if (args[0] === "lint") {
+    const scenarioPath = args[1];
+    if (!scenarioPath || scenarioPath.startsWith("--")) {
+      throw new Error(usage());
+    }
+    return { command: "lint", scenarioPath };
+  }
+
+  if (args[0] === "translate") {
+    const scenarioPath = args[1];
+    if (!scenarioPath || scenarioPath.startsWith("--")) {
+      throw new Error(usage());
+    }
+    const localesFlagIndex = args.indexOf("--locales");
+    const localesRaw =
+      localesFlagIndex === -1 ? null : args[localesFlagIndex + 1];
+    const locales = localesRaw
+      ? localesRaw.split(",").map((l) => l.trim())
+      : DEFAULT_LOCALES;
+    const write = args.includes("--write");
+    return { command: "translate", scenarioPath, locales, write };
+  }
+
   if (args[0] !== "run") {
     throw new Error(usage());
   }
@@ -189,6 +260,8 @@ function usage(): string {
     "Usage:",
     `  langdrift init [scenario.yaml] [--template ${INIT_TEMPLATES.join("|")}]`,
     "  langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown] [--min-pass-rate N] [--allow-fail <locale>]",
+    "  langdrift lint <scenario.yaml|dir>",
+    "  langdrift translate <scenario.yaml> [--locales fr,ar,zh,...] [--write]",
   ].join("\n");
 }
 

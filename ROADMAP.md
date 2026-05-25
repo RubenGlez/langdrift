@@ -12,7 +12,7 @@ LangDrift starts as an experiment, but the product direction is broader: make mu
 
 ## Now
 
-Working on v0.5 Scenario Quality and Authoring.
+Working on v0.6 Rich Assertions.
 
 ## v0.1 Developer Loop
 
@@ -66,11 +66,13 @@ Current status: complete.
 
 Goal: reduce the cost of writing and maintaining multilingual scenarios. Authoring is the main adoption barrier; teams that can't write good scenarios get false confidence.
 
-- Add scenario linting for missing locales, duplicate IDs, and invalid assertions.
-- Add LLM-assisted locale generation: given an English input, suggest equivalent phrasings for selected locales as a starting point. This won't replace native review but lowers the cost of a first draft significantly.
-- Document the authoring limitation: generated phrasings are unreviewed and may introduce phrasing gaps that are indistinguishable from model failures. Users should treat them as drafts.
-- Support tags for domain, intent, risk level, and locale priority.
-- Add warnings when locale coverage differs across related scenarios.
+Current status: core complete.
+
+- Add scenario linting for missing locales, duplicate IDs, and invalid assertions. Done (`langdrift lint`).
+- Add LLM-assisted locale generation. Done (`langdrift translate`). Outputs YAML drafts with disclaimer.
+- Document the authoring limitation. Done (inline disclaimer in translate output and README).
+- Add warnings when locale coverage differs across related scenarios. Done (lint directory mode).
+- Support tags for domain, intent, risk level, and locale priority. Deferred.
 
 ## v0.6 Rich Assertions
 

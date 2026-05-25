@@ -104,6 +104,8 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 - Run a full directory of scenario files in one command for a locale × scenario matrix view
 - Generate markdown matrix reports with `--format markdown`, suitable for PRs and QA review
 - Gate CI with `--min-pass-rate N` (exit non-zero below N% pass rate) and `--allow-fail <locale>` (exclude known-failing locales from exit code)
+- Lint scenario files with `langdrift lint` — catches parse errors, single-locale scenarios, and inconsistent coverage across a directory
+- Generate locale input drafts with `langdrift translate` using an LLM (OPENAI_API_KEY required); outputs YAML ready to paste, with a disclaimer that drafts need review
 
 ## Design choices
 
@@ -115,7 +117,7 @@ Failure modes: `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_argument
 
 ## Project status
 
-LangDrift is at v0.3: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, locale × scenario markdown matrix reports, CI gate flags, and integration docs are all part of the core CLI. Benchmark results are included for three models: DeepSeek deepseek-chat, gpt-4o-mini, and claude-haiku-4-5-20251001.
+LangDrift is at v0.5: the CLI, scenario format, HTTP target contract, fake demo agent, model-backed example agent, JSON output, and checked-in benchmark reports are working. Multi-iteration runs, directory-level multi-scenario execution, locale × scenario markdown matrix reports, CI gate flags, scenario linting, LLM-assisted locale generation, and integration docs are all part of the core CLI. Benchmark results are included for three models: DeepSeek deepseek-chat, gpt-4o-mini, and claude-haiku-4-5-20251001.
 
 ## Quick start
 
@@ -274,9 +276,15 @@ CLI (cli.ts)
 ```bash
 langdrift init [scenario.yaml] [--template support|ecommerce|scheduling|generic]
 langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown] [--min-pass-rate N] [--allow-fail <locale>]
+langdrift lint <scenario.yaml|dir>
+langdrift translate <scenario.yaml> [--locales fr,ar,zh,...] [--write]
 ```
 
-Pass a directory to run all `.yaml` files in it and produce a locale × scenario matrix. `--iterations N` repeats each locale N times and reports aggregated pass rates. `--min-pass-rate N` exits non-zero only if the overall pass rate falls below N%. `--allow-fail <locale>` excludes a locale from the exit code (repeatable). See [CI integration](docs/ci.md) for GitHub Actions examples.
+Pass a directory to `run` to execute all `.yaml` files and produce a locale × scenario matrix. `--iterations N` repeats each locale N times. `--min-pass-rate N` exits non-zero only if the overall pass rate falls below N%. `--allow-fail <locale>` excludes a locale from the exit code (repeatable). See [CI integration](docs/ci.md) for GitHub Actions examples.
+
+`langdrift lint` validates scenario files: parse errors exit 1, warnings (single locale, inconsistent coverage across a directory) exit 0.
+
+`langdrift translate` calls an LLM to generate natural-language input drafts for new locales. Outputs a YAML snippet ready to paste into your scenario. Use `--write` to append directly to the file. Requires `OPENAI_API_KEY`. Generated phrasings are drafts — review before using in evals.
 
 ## HTTP target contract
 

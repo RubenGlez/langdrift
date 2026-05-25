@@ -32,7 +32,17 @@ English passed 3/3 in every scenario.
 
 ## Limitations
 
-This is an applied experiment, not a scientific claim. It uses one model, one agent implementation, a small number of scenarios, and three iterations per locale. The locale prompts were written to preserve intent, but they are still natural-language variants rather than formally controlled translations. The result is best read as a reproducible demonstration of a risk that deserves stronger evaluation, not as a definitive ranking of languages or models.
+This is an applied experiment, not a scientific claim.
+
+**Single model.** The benchmark uses deepseek-chat only. Failures attributed to language-conditioned drift may instead reflect this specific model's training distribution or fine-tuning choices. Running the same scenarios against a second model (planned: OpenAI) would separate model-specific behavior from a more general pattern. Until that comparison exists, the results should be read as findings about deepseek-chat in this setup, not about multilingual agent behavior in general.
+
+**Low iteration count.** Three iterations per locale is too thin to treat pass rates as stable measurements. A 2/3 result for a given locale could be noise. The planned improvement is at least 10 iterations, which would give the pass rate numbers enough weight to draw more confident conclusions.
+
+**Unreviewed locale prompts.** The locale inputs were written by one author to preserve intent but were not reviewed by native speakers. Some failures may reflect phrasing gaps rather than model behavior. This is acknowledged as a real threat to validity, but native review at scale is not practical for a solo project. Results should be interpreted with that caveat explicitly in mind.
+
+**One agent architecture.** The agent uses a simple single-turn prompt-to-tool-call pattern with 5 tools per domain. More complex setups, such as multi-turn agents, RAG, or larger tool sets, may show different failure patterns.
+
+The result is best read as a reproducible demonstration of a real risk, not as a ranking of languages, models, or agent architectures.
 
 **Sample run, ecommerce-cancel-order:**
 

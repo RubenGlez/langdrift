@@ -35,32 +35,34 @@ Goal: make failures easy to scan, share, and debug.
 - Generate markdown reports suitable for PRs and QA review.
 - Keep HTML reports exploratory until the markdown and JSON artifacts are clearly useful.
 
-## v0.3 Developer Integration and CI Gate
+## v0.3 Low-friction Integration
 
-Goal: make LangDrift easy to connect to real agents and useful in CI without making every existing locale failure fatal forever.
+Goal: make it easy to plug any existing agent into LangDrift with minimal code changes. Adoption dies at integration cost; this comes before CI features.
 
 - Add minimal integration examples for common HTTP agent shapes.
 - Document adapter examples for OpenAI-style tool calls, Vercel AI SDK, LangChain/LangGraph, and plain Express/Fastify handlers.
-- Add threshold-based exits, such as minimum pass rate or required locales.
-- Add baseline comparison against a previous checked-in run.
-- Show new failures, fixed failures, and unchanged known failures separately.
-- Support known-failure allowlists with expiry notes.
+- Make the HTTP contract feel like a thin wrapper, not a rewrite.
+
+## v0.4 CI Gate
+
+Goal: let teams block regressions without making every existing locale failure fatal forever. Keep it simple: threshold and a GitHub Actions example, nothing more.
+
+- Add threshold-based exits: minimum pass rate or required locales must pass.
+- Support a known-failure allowlist so teams can accept specific locale failures explicitly.
 - Provide a GitHub Actions example.
-- Emit PR-friendly summaries and machine-readable artifacts.
+- Emit a PR-friendly summary alongside the JSON artifact.
 
-## v0.4 Scenario Quality
+## v0.5 Scenario Quality and Authoring
 
-Goal: make multilingual scenario authoring trustworthy.
+Goal: reduce the cost of writing and maintaining multilingual scenarios. Authoring is the main adoption barrier; teams that can't write good scenarios get false confidence.
 
 - Add scenario linting for missing locales, duplicate IDs, and invalid assertions.
-- Add metadata for source locale, translation method, reviewer, and review status.
-- Document guidelines for writing equivalent prompts across languages.
+- Add LLM-assisted locale generation: given an English input, suggest equivalent phrasings for selected locales as a starting point. This won't replace native review but lowers the cost of a first draft significantly.
+- Document the authoring limitation: generated phrasings are unreviewed and may introduce phrasing gaps that are indistinguishable from model failures. Users should treat them as drafts.
 - Support tags for domain, intent, risk level, and locale priority.
 - Add warnings when locale coverage differs across related scenarios.
-- Add documentation explaining that scenario results should not be read as a ranking of languages.
-- Add a research limitations checklist covering model choice, prompt design, locale authoring, iteration count, and scenario coverage.
 
-## v0.5 Rich Assertions
+## v0.6 Rich Assertions
 
 Goal: evaluate behavior beyond a single tool call.
 
@@ -71,27 +73,20 @@ Goal: evaluate behavior beyond a single tool call.
 - Add placeholder preservation checks.
 - Add policy and safety-oriented assertions once the deterministic behavior assertions are stable.
 
-## v0.6 Comparisons and Drift Tracking
-
-Goal: understand whether failures are caused by model choice, prompt changes, agent architecture, or locale-specific behavior drift over time.
-
-- Compare models, providers, prompts, and agent architectures on the same scenario set.
-- Track drift over time as models or prompts change.
-- Support baseline history so teams can see whether a locale is improving, degrading, or stable.
-- Add report sections that separate product regressions from exploratory benchmark comparisons.
-
 ## Longer Term
 
 - Build a scenario library for common agent workflows.
 - Integrate with observability data to turn production multilingual failures into eval scenarios.
 - Explore richer safety and policy suites for multilingual agent behavior.
+- Compare models, providers, prompts, and agent architectures on the same scenario set.
+- Track drift over time as models or prompts change.
 
 ## Research Backlog
 
-These items strengthen the study and the public narrative, but they are not all product features.
+These items strengthen the study and the public narrative. They are not product features; they improve the credibility and reach of the underlying experiment.
 
-- Add a clear limitations or threats-to-validity section to `RESEARCH.md`.
-- Preserve examples of failed raw responses so readers can inspect what the model did instead of calling a tool.
-- Run at least one comparison model or prompt variant to show that the harness can distinguish model/prompt behavior from the general risk.
-- Make the wording explicit that the experiment does not rank languages or make universal claims about model capability.
-- Document how locale prompts were authored and reviewed: natural phrasing, translation assistance, reviewer language familiarity, and any known caveats.
+- Re-run all six scenarios with an OpenAI model (gpt-4o-mini is cheap enough) and compare pass rates side by side. This is the single most important credibility improvement: if the same locales fail on a different model, the finding is about the language, not deepseek-chat.
+- Increase iterations per locale from 3 to at least 10. This makes the pass rate numbers meaningful and reduces the chance that any individual result is noise.
+- Preserve raw failed responses in the benchmark output so readers can see what the model actually returned instead of calling a tool.
+- Locale prompt authoring without native review is acknowledged as a limitation in `RESEARCH.md`. It is deferred: native review at scale is not practical for a solo project. The limitation is documented; it should be disclosed wherever the results are shared.
+- Make the wording explicit everywhere that the experiment does not rank languages and makes no universal claims about model capability.

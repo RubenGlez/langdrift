@@ -309,8 +309,8 @@ Extra fields in the response body are ignored. Tool call items without a `name` 
 
 ## Where this is going
 
-The benchmark makes the problem concrete: multilingual agent quality needs behavior-level evals, not only translated UI strings. The next step is making LangDrift useful for teams beyond this repo: a proper getting-started flow, expanded assertions (JSON schema, response language, placeholder preservation), and eventually a CI integration.
+The benchmark makes the problem concrete: multilingual agent quality needs behavior-level evals, not only translated UI strings. The immediate next step is the locale matrix: an aggregate view across scenarios and iterations that surfaces cross-language failure patterns as clearly as a CI report. After that, lower-friction integration for common agent frameworks and a basic CI gate.
 
-The longer-term direction is a full eval system for multilingual agent workflows, with a locale matrix report that makes cross-language failures as easy to catch as a failing unit test. See [ROADMAP.md](ROADMAP.md) for the product roadmap.
+See [ROADMAP.md](ROADMAP.md) for the full plan.
 
 See [RESEARCH.md](RESEARCH.md) for the full investigation.

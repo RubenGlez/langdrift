@@ -10,6 +10,18 @@ LangDrift starts as an experiment, but the product direction is broader: make mu
 - Keep locale evaluation behavior-first: tool calls, structured output, policy behavior, and language-specific regressions matter more than translated text alone.
 - Prefer deterministic assertions first. LLM-as-judge may become useful later, but the core value should not depend on another model agreeing with the result.
 
+## Now
+
+Three things, in order:
+
+1. **Strengthen the experiment.** Re-run all six scenarios with an OpenAI model and increase iterations from 3 to at least 10. This is the credibility foundation: without it, the benchmark results are interesting but easy to dismiss. See the Research Backlog for specifics.
+
+2. **Build the locale matrix (v0.2).** The aggregate view across scenarios is the core product payoff — the thing that turns a single run into a finding worth sharing or acting on.
+
+3. **Sharpen the README narrative.** The README should read as a coherent argument: here's the problem, here's the evidence, here's the tool, here's what's next. A reader landing on the repo cold should come away with all of that in under five minutes.
+
+Everything else in the roadmap is planned and worth building, but none of it starts before these three are done.
+
 ## v0.1 Developer Loop
 
 Goal: make the first run obvious and repeatable.

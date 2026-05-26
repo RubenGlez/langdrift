@@ -37,6 +37,7 @@
   "scripts": {
     "langdrift": "node ./src/cli.ts",
     "release": "bash scripts/release.sh",
+    "postversion": "git push && git push --tags",
     "lint": "biome check src/ tests/",
     "format": "biome check --write src/ tests/",
     "typecheck": "tsc --noEmit",

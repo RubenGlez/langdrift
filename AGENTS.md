@@ -63,3 +63,11 @@ CLI (cli.ts)
 - `fake-agent/`: deterministic local agent for no-key demos and CLI smoke tests
 
 **Scenarios** (`examples/scenarios/*.yaml`): one scenario per file; each locale gets its own `input` and `expect` block.
+
+## Releasing
+
+```bash
+pnpm version patch   # or minor / major
+```
+
+The `postversion` hook pushes the commit and tag automatically. The publish workflow on GitHub Actions fires from the tag and handles testing and publishing to npm.

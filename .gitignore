@@ -6,3 +6,4 @@ node_modules/
 dist/
 coverage/
 examples/deepseek-support-agent/benchmark-results.md
+.harness/

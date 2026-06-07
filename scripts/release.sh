@@ -42,4 +42,4 @@ git tag "$TAG"
 git push && git push --tags
 
 gh release create "$TAG" --generate-notes --title "$TAG"
-pnpm publish --provenance --no-git-checks
+pnpm publish --no-git-checks

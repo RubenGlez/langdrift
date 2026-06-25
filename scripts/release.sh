@@ -31,6 +31,26 @@ pnpm typecheck
 pnpm test
 pnpm audit --audit-level=high --prod
 
+# Smoke test the publishable artifact: pack (runs the prepack build), install the
+# tarball in a throwaway dir, and run the installed bin. Running raw .ts under
+# node_modules fails, so this guards against shipping a package that cannot run.
+# Done before the version bump so a broken package aborts with no side effects.
+echo "Smoke testing the packaged CLI..."
+SMOKE_DIR=$(mktemp -d)
+npm pack --pack-destination "$SMOKE_DIR" >/dev/null
+SMOKE_TARBALL=$(ls "$SMOKE_DIR"/*.tgz)
+if (cd "$SMOKE_DIR" \
+  && npm init -y >/dev/null 2>&1 \
+  && npm install "$SMOKE_TARBALL" --no-audit --no-fund --silent >/dev/null 2>&1 \
+  && node ./node_modules/.bin/langdrift --version >/dev/null); then
+  rm -rf "$SMOKE_DIR"
+  echo "Smoke test passed."
+else
+  rm -rf "$SMOKE_DIR"
+  echo "Smoke test failed: the packaged CLI does not run when installed. Aborting (no version bumped, nothing published)."
+  exit 1
+fi
+
 npm version "$BUMP" --no-git-tag-version
 
 VERSION=$(node -p "require('./package.json').version")

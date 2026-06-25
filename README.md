@@ -74,7 +74,9 @@ Failure modes include `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_a
 npm install -g langdrift
 ```
 
-Requires Node >= 24. LangDrift runs TypeScript directly via Node's native type stripping, so there is no build step. Node 22.6+ also works if you pass `--experimental-strip-types` when invoking the CLI directly, but the global install expects Node 24.
+Requires Node >= 24. The published package ships compiled JavaScript, so no build step or type-stripping flags are needed to run the installed CLI.
+
+Working from a clone instead runs the TypeScript source directly via Node's native type stripping (`node ./src/cli.ts`), which is how the "30 seconds" demo above works without a build.
 
 ## Quick Start
 

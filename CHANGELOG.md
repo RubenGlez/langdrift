@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1] - 2026-06-25
+
+### Fixed
+- The published package now ships compiled JavaScript (`dist/`) and runs when installed from npm. Previously it shipped raw TypeScript as its CLI entry, which Node refuses to type-strip under `node_modules`, so `npm install langdrift` produced a non-functional CLI on every prior version (including 0.3.0).
+
 ## [0.3.0] - 2026-06-25
 
 ### Added

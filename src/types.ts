@@ -4,9 +4,17 @@ export type Scenario = {
   locales: Record<string, ScenarioLocale>;
 };
 
+// An expected argument value: a scalar compared with scalar-normalized
+// equality, or a `oneOf` list that matches if the actual value equals any option.
+export type ArgMatcher =
+  | string
+  | number
+  | boolean
+  | { oneOf: Array<string | number | boolean> };
+
 export type ToolCallAssertion = {
   name: string;
-  arguments?: Record<string, string>;
+  arguments?: Record<string, ArgMatcher>;
 };
 
 export type ScenarioLocale = {

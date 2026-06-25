@@ -5,7 +5,7 @@
 
 Locale-aware evals for AI agent behavior.
 
-LangDrift checks whether an AI agent preserves behavior across languages: tool selection, tool arguments, response language, and failure modes. It is built for teams who already test their agent in English and want to know what changes when the same intent arrives in French, Arabic, Chinese, Basque, Swahili, or any other locale.
+LangDrift checks whether an AI agent preserves behavior across languages: tool selection, tool arguments, response script, and failure modes. It is built for teams who already test their agent in English and want to know what changes when the same intent arrives in French, Arabic, Chinese, Basque, Swahili, or any other locale.
 
 The core question:
 
@@ -48,9 +48,9 @@ Result: failed, 2 of 12 locales failed
 
 ## Why This Exists
 
-AI localization is moving from translated strings to localized behavior. For an agent, a localized experience is only correct if the agent preserves intent, tool calls, structured output, and policy behavior across languages.
+AI localization is moving from translated strings to localized behavior. For an agent, a localized experience is only correct if the agent preserves intent, tool selection, and tool arguments across languages.
 
-In the included benchmark, English often passed while equivalent prompts in Basque, Yoruba, Swahili, Chinese, Welsh, and Mongolian triggered missing tool calls, wrong tool arguments, or different tool-use behavior depending on the model. This is not a universal language ranking. It is a reproducible demonstration that agent behavior can drift across locales.
+In the included benchmark, English often passed while equivalent prompts in Basque, Yoruba, Swahili, Chinese, Welsh, and Mongolian triggered missing tool calls, wrong tool arguments, or different tool-use behavior. The strongest signal is that several of these weaknesses recur across three independently trained models, which is harder to dismiss than any single per-locale rate. This is not a universal language ranking; it is a reproducible demonstration that agent behavior can drift across locales.
 
 Read the full methodology, results, limitations, and supporting papers in [RESEARCH.md](RESEARCH.md).
 
@@ -58,7 +58,7 @@ Read the full methodology, results, limitations, and supporting papers in [RESEA
 
 - Runs YAML scenarios with per-locale user inputs.
 - Sends each locale to any HTTP agent target.
-- Checks tool calls, shallow arguments, forbidden tools, ordered tool-call sequences, and response language.
+- Checks tool calls, shallow arguments, forbidden tools, ordered tool-call sequences, and response script.
 - Reports pass/fail by locale with failure mode classification.
 - Emits terminal, JSON, or markdown reports.
 - Exits non-zero on failure, so it works in CI.
@@ -128,6 +128,29 @@ Run a directory of scenarios:
 ```bash
 langdrift run ./scenarios --target http://127.0.0.1:3010/api/agent --iterations 3 --format markdown
 ```
+
+## Assertions
+
+### Tool arguments
+
+Argument values are matched with scalar-normalized equality, so a JSON number `2` matches `"2"` and a boolean `true` matches `"true"`.
+
+Tool arguments must be **canonical identifiers or enums**, not free text. Agents tend to echo the user's language into free-text argument values, so an assertion like `reason: duplicate_charge` will report a false `wrong_argument` when a localized request produces `reason: "doble cargo"`. Model your tools to emit canonical values, or accept several with `oneOf`:
+
+```yaml
+expect:
+  toolCall:
+    name: create_refund_ticket
+    arguments:
+      reason:
+        oneOf: [duplicate_charge, double_charge]
+```
+
+`oneOf` is an inline list and must contain at least one value; `langdrift lint` reports an error otherwise.
+
+### Response script
+
+`responseLanguage` is a **script-family check**, not language detection. It confirms a reply uses the script a locale is written in (for example, that an `ar` reply is in Arabic script). It cannot distinguish languages that share a script: a `fr` assertion passes for any Latin-script reply, and `ar` cannot be told apart from `fa` or `ur`. For a locale whose script LangDrift cannot determine, the check passes rather than guessing.
 
 ## HTTP Target Contract
 

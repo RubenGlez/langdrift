@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- Tool-argument assertions support `oneOf` (a list of accepted canonical values) and match scalars with type-normalized equality, so canonical arguments are no longer falsely failed on type alone (e.g. number `2` matches `"2"`).
+- Benchmark report includes a 95% Wilson confidence interval per locale.
+
+### Changed
+- `responseLanguage` is documented and implemented as a script-family check: it confirms a reply's script and passes when a locale's script cannot be determined, rather than guessing. It cannot distinguish languages that share a script.
+- Benchmark harness consumes the CLI's `--format json` output instead of scraping the terminal report.
+- Research methodology framing: benchmark runs are near-deterministic at temperature 0, per-locale rates are reported as estimates with confidence intervals, and cross-model agreement is foregrounded as the primary finding.
+
+### Fixed
+- `responseLanguage` no longer false-flags correct responses for locales whose script is not in the Latin set (e.g. Mongolian Cyrillic).
+
 ## [0.2.7] - 2026-06-07
 
 ### Changed

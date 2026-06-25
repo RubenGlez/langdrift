@@ -1,5 +1,10 @@
 import { readFile } from "node:fs/promises";
-import type { Scenario, ScenarioLocale, ToolCallAssertion } from "./types.ts";
+import type {
+  ArgMatcher,
+  Scenario,
+  ScenarioLocale,
+  ToolCallAssertion,
+} from "./types.ts";
 
 type Line = {
   indent: number;
@@ -71,7 +76,7 @@ function parseToolCallList(
     const name = scalarAt(itemLines, contentIndent, "name");
 
     if (name) {
-      const toolArguments = nestedMapAt(
+      const toolArguments = nestedArgsAt(
         itemLines,
         [contentIndent],
         ["arguments"],
@@ -124,7 +129,7 @@ function parseLocales(
       [4, 6, 8],
       ["expect", "toolCall", "name"],
     );
-    const toolArguments = nestedMapAt(
+    const toolArguments = nestedArgsAt(
       block,
       [4, 6, 8],
       ["expect", "toolCall", "arguments"],
@@ -291,12 +296,12 @@ function nestedScalarAt(
   return undefined;
 }
 
-function nestedMapAt(
+function nestedArgsAt(
   lines: Line[],
   indents: number[],
   keys: string[],
   childIndent: number,
-): Record<string, string> {
+): Record<string, ArgMatcher> {
   let start = 0;
 
   for (let index = 0; index < keys.length; index += 1) {
@@ -314,7 +319,7 @@ function nestedMapAt(
     start = lineIndex + 1;
   }
 
-  const entries: Record<string, string> = {};
+  const entries: Record<string, ArgMatcher> = {};
 
   for (let index = start; index < lines.length; index += 1) {
     const line = lines[index];
@@ -323,12 +328,48 @@ function nestedMapAt(
       break;
     }
 
-    if (line.indent === childIndent && line.value !== "") {
+    if (line.indent !== childIndent) {
+      continue;
+    }
+
+    // Scalar argument: `reason: duplicate_charge`
+    if (line.value !== "") {
       entries[line.key] = parseScalar(line.value, line.number);
+      continue;
+    }
+
+    // Matcher argument: an arg key with no inline value, e.g.
+    //   reason:
+    //     oneOf: [duplicate_charge, double_charge]
+    const child = lines[index + 1];
+    if (child && child.indent === childIndent + 2 && child.key === "oneOf") {
+      entries[line.key] = { oneOf: parseInlineList(child.value, child.number) };
     }
   }
 
   return entries;
+}
+
+function parseInlineList(value: string, lineNumber: number): string[] {
+  if (!value.startsWith("[") || !value.endsWith("]")) {
+    throw new Error(
+      `scenario line ${lineNumber}: oneOf must be an inline list like [a, b]`,
+    );
+  }
+
+  const inner = value.slice(1, -1).trim();
+  const items =
+    inner === ""
+      ? []
+      : inner.split(",").map((item) => parseScalar(item.trim(), lineNumber));
+
+  if (items.length === 0) {
+    throw new Error(
+      `scenario line ${lineNumber}: oneOf must list at least one value`,
+    );
+  }
+
+  return items;
 }
 
 function parseScalar(value: string, lineNumber: number): string {

@@ -1,12 +1,15 @@
 import type {
+  ArgMatcher,
   FailureMode,
   ScenarioLocale,
   TargetResponse,
   ToolCallAssertion,
 } from "./types.ts";
 
-// Maps BCP-47 base language tags to their primary non-Latin Unicode script range.
-// Languages not listed here are assumed to use a Latin-based script.
+// responseLanguage is a script-family check, not language detection. It confirms
+// a response uses the script a locale is written in; it cannot tell apart
+// languages that share a script (en/fr, ar/fa/ur, ru/uk). Maps BCP-47 base tags
+// to their primary non-Latin Unicode script range.
 const SCRIPT_PATTERNS: Record<string, RegExp> = {
   ja: /[぀-ヿ一-鿿㐀-䶿]/,
   zh: /[一-鿿㐀-䶿]/,
@@ -18,6 +21,7 @@ const SCRIPT_PATTERNS: Record<string, RegExp> = {
   uk: /[Ѐ-ӿ]/,
   bg: /[Ѐ-ӿ]/,
   sr: /[Ѐ-ӿ]/,
+  mn: /[Ѐ-ӿ]/,
   hi: /[ऀ-ॿ]/,
   mr: /[ऀ-ॿ]/,
   bn: /[ঀ-৿]/,
@@ -27,6 +31,32 @@ const SCRIPT_PATTERNS: Record<string, RegExp> = {
   ka: /[Ⴀ-ჿ]/,
   am: /[ሀ-፿]/,
 };
+
+// Locales known to use a Latin script. The non-Latin penalty only fires for
+// these; a locale that is neither in SCRIPT_PATTERNS nor here is treated as
+// "script not determinable" and passes rather than being wrongly flagged.
+const LATIN_LOCALES = new Set([
+  "en",
+  "fr",
+  "es",
+  "de",
+  "it",
+  "pt",
+  "nl",
+  "sv",
+  "da",
+  "no",
+  "fi",
+  "pl",
+  "cs",
+  "tr",
+  "id",
+  "vi",
+  "sw",
+  "cy",
+  "eu",
+  "yo",
+]);
 
 // All non-Latin script ranges combined; used to detect unexpected non-Latin content in Latin-locale responses.
 const NON_LATIN_PATTERN = /[Ͱ-ϿЀ-ӿ֐-׿؀-ۿऀ-৿฀-๿ᄀ-ᇿ぀-ヿ㐀-䶿一-鿿가-힯]/;
@@ -200,8 +230,8 @@ function assertResponseLanguage(
         detail: `expected ${base} script in response, got mostly other script`,
       };
     }
-  } else {
-    // Latin-script locale: response should not be dominated by a non-Latin script
+  } else if (LATIN_LOCALES.has(base)) {
+    // Known Latin-script locale: response should not be dominated by a non-Latin script.
     const nonLatinCount = letters.filter((c) =>
       NON_LATIN_PATTERN.test(c),
     ).length;
@@ -212,6 +242,13 @@ function assertResponseLanguage(
         detail: `expected Latin-script response (${base}), got mostly non-Latin characters`,
       };
     }
+  } else {
+    // Script not determinable for this locale: pass rather than guess.
+    return {
+      pass: true,
+      detail: `responseLanguage: ${expectedLocale} (script not determinable)`,
+      failureMode: null,
+    };
   }
 
   return {
@@ -242,9 +279,41 @@ function assertForbiddenToolCall(
   };
 }
 
+// Scalar-normalized equality: tolerates JSON-type vs YAML-string differences
+// (number 2 matches "2", boolean true matches "true") so canonical tool args
+// are not falsely failed on type alone.
+function matchesScalar(
+  actual: unknown,
+  expected: string | number | boolean,
+): boolean {
+  return String(actual) === String(expected);
+}
+
+function matchesArg(actual: unknown, expected: ArgMatcher): boolean {
+  if (
+    typeof expected === "object" &&
+    expected !== null &&
+    "oneOf" in expected
+  ) {
+    return expected.oneOf.some((option) => matchesScalar(actual, option));
+  }
+  return matchesScalar(actual, expected);
+}
+
+function describeArg(expected: ArgMatcher): string {
+  if (
+    typeof expected === "object" &&
+    expected !== null &&
+    "oneOf" in expected
+  ) {
+    return `one of [${expected.oneOf.join(", ")}]`;
+  }
+  return String(expected);
+}
+
 function assertExpectedArguments(
   toolName: string,
-  expectedArguments: Record<string, string> | undefined,
+  expectedArguments: Record<string, ArgMatcher> | undefined,
   actualArguments: unknown,
 ): Pass | Fail {
   if (!expectedArguments || Object.keys(expectedArguments).length === 0) {
@@ -270,15 +339,15 @@ function assertExpectedArguments(
       return {
         pass: false,
         failureMode: "missing_argument",
-        detail: `expected argument ${key}=${expectedValue}, got missing`,
+        detail: `expected argument ${key}=${describeArg(expectedValue)}, got missing`,
       };
     }
 
-    if (actual[key] !== expectedValue) {
+    if (!matchesArg(actual[key], expectedValue)) {
       return {
         pass: false,
         failureMode: "wrong_argument",
-        detail: `expected argument ${key}=${expectedValue}, got ${String(actual[key])}`,
+        detail: `expected argument ${key}=${describeArg(expectedValue)}, got ${String(actual[key])}`,
       };
     }
   }

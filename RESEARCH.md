@@ -57,7 +57,7 @@ This is an applied experiment, not a scientific claim.
 
 **Three models, one architecture.** The benchmark now covers gpt-4o-mini, claude-haiku-4-5-20251001, and DeepSeek deepseek-chat via the same HTTP agent wrapper with the same system prompt and tool set. Cross-model patterns (Basque, Yoruba, low-resource language clusters) are therefore more credible than when a single model was used. However, the agent architecture is still simple: single-turn, 5 tools per domain, no RAG, no multi-turn context. More complex setups may show different failure patterns.
 
-**Small sample, but comparable across models.** Each scenario/model/locale cell now uses 10 iterations. That is enough to expose repeated failure patterns and reduce single-run noise, but it is still not a large-sample statistical benchmark.
+**Small sample, reported with uncertainty.** Each scenario/model/locale cell uses 10 iterations. The agent runs at `temperature 0`, so these iterations are near-deterministic: they capture API-side variance, not a sampling distribution. N=10 is enough to expose repeated failure patterns but is not a large-sample statistical benchmark, and a single 7/10-vs-9/10 difference is well within noise. The benchmark report now prints a 95% Wilson confidence interval per locale, and per-cell pass rates throughout this document should be read as estimates with that uncertainty, not exact rankings.
 
 **Unreviewed locale prompts.** The locale inputs were written by one author to preserve intent but were not reviewed by native speakers. Some failures may reflect phrasing gaps rather than model behavior. This is acknowledged as a real threat to validity, but native review at scale is not practical for a solo project. Results should be interpreted with that caveat explicitly in mind.
 
@@ -91,9 +91,11 @@ Result: failed, 4 of 12 locales failed
 
 ## What we observed
 
-These observations now cover three models and 10 iterations per locale. They suggest hypotheses worth testing more rigorously, not conclusions.
+These observations cover three models and 10 iterations per locale. They suggest hypotheses worth testing more rigorously, not conclusions.
 
-**Some locale weaknesses are model-independent.** Basque (`eu`) fails in multiple scenarios on all three models. Swahili (`sw`), Yoruba (`yo`), Mongolian (`mn`), Welsh (`cy`), and Chinese (`zh`) also recur across at least two models, though the exact failure mode varies by model and scenario. This cross-model pattern is harder to dismiss as a single model's training quirk.
+The strongest signal here is **cross-model agreement**, and it is worth stating why. The experiment validated only the English prompt to 3/3 before writing the other locales; every non-English prompt therefore carries a translation-quality confound that English does not, and that confound is asymmetric. So a single model failing a single locale is weak evidence — it could be the phrasing, not the model. But the *same* prompt failing across independently trained models (gpt-4o-mini, claude-haiku, DeepSeek) is hard to explain by one bad phrasing. Read the cross-model recurrences below as the real finding; read any single per-cell rate as a noisy estimate (see the confidence intervals) confounded by phrasing, not as a ranking.
+
+**Some locale weaknesses recur across models.** Basque (`eu`) fails in multiple scenarios on all three models. Swahili (`sw`), Yoruba (`yo`), Mongolian (`mn`), Welsh (`cy`), and Chinese (`zh`) also recur across at least two models, though the exact failure mode varies by model and scenario. This cross-model pattern is harder to dismiss as a single model's training quirk.
 
 **Speaker count doesn't predict failures.** High-speaker-count languages are not automatically safe: Arabic and Indonesian both fail heavily on some DeepSeek scenarios, while gpt-4o-mini handles them cleanly in most cases. Swahili and Yoruba also fail regularly. Whatever drives failures in this setup, raw speaker count alone doesn't explain it.
 

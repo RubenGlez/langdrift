@@ -4,7 +4,8 @@ import { once } from "node:events";
 import { writeFile } from "node:fs/promises";
 import { basename } from "node:path";
 
-const scenarioPath = process.env.SCENARIO ?? "./examples/scenarios/support-routing.yaml";
+const scenarioPath =
+  process.env.SCENARIO ?? "./examples/scenarios/support-routing.yaml";
 const domain = process.env.DOMAIN ?? "support";
 const provider = process.env.MODEL_PROVIDER ?? "openai-compat";
 const modelName = process.env.MODEL_NAME ?? "gpt-4o-mini";
@@ -38,8 +39,12 @@ const server = spawn(process.execPath, ["./examples/agent/server.ts"], {
 });
 
 let serverOutput = "";
-server.stdout.on("data", (chunk) => { serverOutput += chunk.toString(); });
-server.stderr.on("data", (chunk) => { serverOutput += chunk.toString(); });
+server.stdout.on("data", (chunk) => {
+  serverOutput += chunk.toString();
+});
+server.stderr.on("data", (chunk) => {
+  serverOutput += chunk.toString();
+});
 
 try {
   await waitForServer();
@@ -50,7 +55,14 @@ try {
     const startedAt = performance.now();
     const run = await runLangDrift();
     const durationMs = Math.round(performance.now() - startedAt);
-    runs.push({ iteration: i + 1, durationMs, exitCode: run.exitCode, output: run.output, summary: parseOutput(run.output) });
+    const { summary, log } = parseJsonRun(run.stdout, run.stderr);
+    runs.push({
+      iteration: i + 1,
+      durationMs,
+      exitCode: run.exitCode,
+      output: log,
+      summary,
+    });
   }
 
   const report = renderReport(runs);
@@ -81,36 +93,102 @@ async function waitForServer(): Promise<void> {
   throw new Error(`Agent server did not start.\n${serverOutput}`);
 }
 
-async function runLangDrift(): Promise<{ exitCode: number; output: string }> {
+async function runLangDrift(): Promise<{
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+}> {
   const child = spawn(
     process.execPath,
-    ["./src/cli.ts", "run", scenarioPath, "--target", target],
+    [
+      "./src/cli.ts",
+      "run",
+      scenarioPath,
+      "--target",
+      target,
+      "--format",
+      "json",
+    ],
     { stdio: ["ignore", "pipe", "pipe"] },
   );
 
-  let output = "";
-  child.stdout.on("data", (chunk) => { output += chunk.toString(); });
-  child.stderr.on("data", (chunk) => { output += chunk.toString(); });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk.toString();
+  });
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk.toString();
+  });
 
   const [exitCode] = (await once(child, "close")) as [number];
-  return { exitCode, output };
+  return { exitCode, stdout, stderr };
 }
 
-function parseOutput(output: string): Record<string, LocaleSummary> {
-  const summary: Record<string, LocaleSummary> = {};
+type JsonLocaleResult = {
+  locale: string;
+  status: "pass" | "fail";
+  passed: number;
+  total: number;
+  failureMode: string | null;
+  detail: string;
+};
 
-  for (const line of output.split("\n")) {
-    const match = line.match(/^([a-z]{2,5})\s+(\d+)\/(\d+)\s+(\S+)\s+(.*)/);
-    if (match) {
-      const passed = Number(match[2]);
-      const total = Number(match[3]);
-      const status = passed === total ? "pass" : "fail";
-      const failureMode = match[4] === "-" ? null : match[4];
-      summary[match[1]] = { status, failureMode, detail: match[5] ?? "" };
-    }
+function parseJsonRun(
+  stdout: string,
+  stderr: string,
+): { summary: Record<string, LocaleSummary>; log: string } {
+  let report: { results: JsonLocaleResult[] };
+  try {
+    report = JSON.parse(stdout);
+  } catch {
+    throw new Error(
+      `Expected JSON from langdrift run, got:\n${stdout}\n${stderr}`,
+    );
   }
 
-  return summary;
+  const summary: Record<string, LocaleSummary> = {};
+  const logLines: string[] = [];
+
+  for (const r of report.results) {
+    summary[r.locale] = {
+      status: r.status,
+      failureMode: r.failureMode,
+      detail: r.detail,
+    };
+    logLines.push(
+      `${r.locale}\t${r.passed}/${r.total}\t${r.failureMode ?? "-"}\t${r.detail}`,
+    );
+  }
+
+  return { summary, log: logLines.join("\n") };
+}
+
+// Wilson score interval for a binomial proportion. Reported per locale so
+// per-cell pass rates are read as estimates with uncertainty, not exact facts.
+// Runs are near-deterministic at temperature 0, so this reflects API-side
+// variance over N iterations, not a sampling distribution.
+function wilsonInterval(
+  passes: number,
+  total: number,
+  z = 1.96,
+): [number, number] | null {
+  if (total === 0) return null;
+  const p = passes / total;
+  const denom = 1 + (z * z) / total;
+  const center = (p + (z * z) / (2 * total)) / denom;
+  const margin =
+    (z / denom) *
+    Math.sqrt((p * (1 - p)) / total + (z * z) / (4 * total * total));
+  const low = Math.max(0, center - margin);
+  const high = Math.min(1, center + margin);
+  return [low, high];
+}
+
+function formatCi(passes: number, total: number): string {
+  const ci = wilsonInterval(passes, total);
+  if (!ci) return "—";
+  return `[${ci[0].toFixed(2)}, ${ci[1].toFixed(2)}]`;
 }
 
 function renderReport(runs: BenchmarkRun[]): string {
@@ -120,7 +198,14 @@ function renderReport(runs: BenchmarkRun[]): string {
   }
   const locales = Array.from(localeSet);
 
-  const failureModes = ["no_tool_call", "wrong_tool", "wrong_argument", "missing_argument", "forbidden_tool", "wrong_sequence"] as const;
+  const failureModes = [
+    "no_tool_call",
+    "wrong_tool",
+    "wrong_argument",
+    "missing_argument",
+    "forbidden_tool",
+    "wrong_sequence",
+  ] as const;
 
   type LocaleStats = {
     passes: number;
@@ -128,14 +213,23 @@ function renderReport(runs: BenchmarkRun[]): string {
   };
 
   const stats: Record<string, LocaleStats> = Object.fromEntries(
-    locales.map((l) => [l, { passes: 0, failures: Object.fromEntries(failureModes.map((m) => [m, 0])) }]),
+    locales.map((l) => [
+      l,
+      {
+        passes: 0,
+        failures: Object.fromEntries(failureModes.map((m) => [m, 0])),
+      },
+    ]),
   );
 
   for (const run of runs) {
     for (const [locale, result] of Object.entries(run.summary)) {
       if (result.status === "pass") {
         stats[locale].passes += 1;
-      } else if (result.failureMode && result.failureMode in stats[locale].failures) {
+      } else if (
+        result.failureMode &&
+        result.failureMode in stats[locale].failures
+      ) {
         stats[locale].failures[result.failureMode] += 1;
       }
     }
@@ -143,17 +237,19 @@ function renderReport(runs: BenchmarkRun[]): string {
 
   const totalChecks = runs.length * locales.length;
   const totalPasses = locales.reduce((sum, l) => sum + stats[l].passes, 0);
-  const avgDuration = Math.round(runs.reduce((sum, r) => sum + r.durationMs, 0) / runs.length);
+  const avgDuration = Math.round(
+    runs.reduce((sum, r) => sum + r.durationMs, 0) / runs.length,
+  );
 
-  const headerCols = ["Locale", "Pass", ...failureModes];
+  const headerCols = ["Locale", "Pass", "95% CI", ...failureModes];
   const colWidths = headerCols.map((h) => h.length);
 
   const tableRows = locales.map((locale) => {
     const s = stats[locale];
-    const failures = s.passes < runs.length ? runs.length - s.passes : 0;
     return [
       locale,
       `${s.passes}/${runs.length}`,
+      formatCi(s.passes, runs.length),
       ...failureModes.map((m) => String(s.failures[m] || 0)),
     ];
   });
@@ -167,7 +263,8 @@ function renderReport(runs: BenchmarkRun[]): string {
   const tableHeader = `| ${headerCols.map((h, i) => h.padEnd(colWidths[i])).join(" | ")} |`;
   const tableDivider = `| ${colWidths.map((w) => "-".repeat(w)).join(" | ")} |`;
   const tableBody = tableRows.map(
-    (row) => `| ${row.map((cell, i) => cell.padEnd(colWidths[i])).join(" | ")} |`,
+    (row) =>
+      `| ${row.map((cell, i) => cell.padEnd(colWidths[i])).join(" | ")} |`,
   );
 
   return [

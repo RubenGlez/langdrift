@@ -710,3 +710,165 @@ test("markdown run report includes pass rates and scenario id", () => {
   assert.ok(report.includes("no_tool_call"));
   assert.ok(report.startsWith("# LangDrift Run"));
 });
+
+test("oneOf argument passes when actual matches any listed value", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: {
+        name: "create_refund_ticket",
+        arguments: { reason: { oneOf: ["duplicate_charge", "double_charge"] } },
+      },
+    },
+    {
+      text: "ok",
+      toolCalls: [
+        {
+          name: "create_refund_ticket",
+          arguments: { reason: "double_charge" },
+        },
+      ],
+      structured: null,
+    },
+  );
+
+  assert.equal(result.pass, true);
+});
+
+test("oneOf argument fails when actual matches no listed value", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: {
+        name: "create_refund_ticket",
+        arguments: { reason: { oneOf: ["duplicate_charge", "double_charge"] } },
+      },
+    },
+    {
+      text: "ok",
+      toolCalls: [
+        { name: "create_refund_ticket", arguments: { reason: "fraud" } },
+      ],
+      structured: null,
+    },
+  );
+
+  assert.deepEqual(result, {
+    pass: false,
+    failureMode: "wrong_argument",
+    detail:
+      "expected argument reason=one of [duplicate_charge, double_charge], got fraud",
+  });
+});
+
+test("scalar argument matches a numeric actual value", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: { name: "set_quantity", arguments: { count: "2" } },
+    },
+    {
+      text: "ok",
+      toolCalls: [{ name: "set_quantity", arguments: { count: 2 } }],
+      structured: null,
+    },
+  );
+
+  assert.equal(result.pass, true);
+});
+
+test("scalar argument matches a boolean actual value", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: { name: "set_flag", arguments: { enabled: "true" } },
+    },
+    {
+      text: "ok",
+      toolCalls: [{ name: "set_flag", arguments: { enabled: true } }],
+      structured: null,
+    },
+  );
+
+  assert.equal(result.pass, true);
+});
+
+test("parses oneOf argument from YAML", () => {
+  const scenario = parseScenario(`
+id: refund_request
+agent: support
+
+locales:
+  en:
+    input: "I was charged twice."
+    expect:
+      toolCall:
+        name: create_refund_ticket
+        arguments:
+          reason:
+            oneOf: [duplicate_charge, double_charge]
+`);
+
+  const tc = scenario.locales.en.expect.toolCall;
+  assert.ok(!Array.isArray(tc) && tc !== undefined);
+  assert.deepEqual(tc.arguments, {
+    reason: { oneOf: ["duplicate_charge", "double_charge"] },
+  });
+});
+
+test("rejects an empty oneOf list", () => {
+  assert.throws(
+    () =>
+      parseScenario(`
+id: refund_request
+agent: support
+
+locales:
+  en:
+    input: "x"
+    expect:
+      toolCall:
+        name: create_refund_ticket
+        arguments:
+          reason:
+            oneOf: []
+`),
+    /oneOf must list at least one value/,
+  );
+});
+
+test("responseLanguage passes for a Mongolian Cyrillic response (mn maps to Cyrillic)", () => {
+  // Regression: mn was previously treated as Latin and a correct Cyrillic
+  // response was falsely flagged wrong_language.
+  const result = assertExpectedToolCall(
+    { responseLanguage: "mn" },
+    {
+      text: "Тантай холбогдоход баяртай байна.",
+      toolCalls: [],
+      structured: null,
+    },
+  );
+
+  assert.equal(result.pass, true);
+});
+
+test("responseLanguage passes (cannot decide) for a locale in neither script map nor Latin set", () => {
+  // Khmer (km) has no script entry and is not in LATIN_LOCALES, so the check
+  // must not penalize it regardless of the response script.
+  const result = assertExpectedToolCall(
+    { responseLanguage: "km" },
+    { text: "ខ្ញុំអាចជួយបាន", toolCalls: [], structured: null },
+  );
+
+  assert.equal(result.pass, true);
+  assert.equal(result.detail, "responseLanguage: km (script not determinable)");
+});
+
+test("responseLanguage passes for Latin-vs-Latin (script cannot distinguish language)", () => {
+  const result = assertExpectedToolCall(
+    { responseLanguage: "fr" },
+    {
+      text: "I can help you with that refund.",
+      toolCalls: [],
+      structured: null,
+    },
+  );
+
+  assert.equal(result.pass, true);
+});

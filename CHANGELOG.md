@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.3.0] - 2026-06-25
 
 ### Added
 - Tool-argument assertions support `oneOf` (a list of accepted canonical values) and match scalars with type-normalized equality, so canonical arguments are no longer falsely failed on type alone (e.g. number `2` matches `"2"`).

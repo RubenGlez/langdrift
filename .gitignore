@@ -6,4 +6,8 @@ node_modules/
 dist/
 coverage/
 examples/deepseek-support-agent/benchmark-results.md
-.harness/
+
+# doctier:begin — managed by 'doctier init', do not edit
+**/_prototype-*
+**/_spike/**
+# doctier:end

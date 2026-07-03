@@ -74,7 +74,7 @@ Failure modes include `no_tool_call`, `wrong_tool`, `wrong_argument`, `missing_a
 npm install -g langdrift
 ```
 
-Requires Node >= 24. The published package ships compiled JavaScript, so no build step or type-stripping flags are needed to run the installed CLI.
+Requires Node >= 22. The published package ships compiled JavaScript, so no build step or type-stripping flags are needed to run the installed CLI.
 
 Working from a clone instead runs the TypeScript source directly via Node's native type stripping (`node ./src/cli.ts`), which is how the "30 seconds" demo above works without a build.
 

@@ -1,23 +1,32 @@
 import type { MatrixResult, RunResult } from "./types.ts";
 
+// Table cells can contain `|` (scenario ids, failure details); escape it so the
+// markdown table doesn't break into extra columns (F-35).
+function escapeCell(value: string): string {
+  return value.replace(/\|/g, "\\|");
+}
+
 export function formatMarkdownRunReport(run: RunResult): string {
   const failedLocales = run.results.filter((r) => r.status === "fail").length;
   const rows = run.results.map((r) => {
     const rate = `${r.passed}/${r.total}`;
     const pct = `${Math.round((r.passed / r.total) * 100)}%`;
     const failure = r.failureMode ?? "—";
-    return `| ${r.locale} | ${rate} | ${pct} | ${failure} |`;
+    // Include the detail so "expected X, got Y" is visible where triage
+    // happens, not just the mode (F-35).
+    const detail = r.detail ? escapeCell(r.detail) : "—";
+    return `| ${r.locale} | ${rate} | ${pct} | ${failure} | ${detail} |`;
   });
 
   const lines = [
     "# LangDrift Run",
     "",
-    `**Scenario:** ${run.scenarioId}  `,
+    `**Scenario:** ${escapeCell(run.scenarioId)}  `,
     `**Target:** ${run.target}  `,
     `**Iterations:** ${run.iterations}  `,
     "",
-    "| Locale | Passed | Rate | Failure |",
-    "|--------|--------|------|---------|",
+    "| Locale | Passed | Rate | Failure | Detail |",
+    "|--------|--------|------|---------|--------|",
     ...rows,
     "",
     `**Result:** ${failedLocales === 0 ? "passed" : "failed"}, ${failedLocales} of ${run.results.length} locales failed`,
@@ -31,7 +40,7 @@ export function formatMarkdownMatrixReport(matrix: MatrixResult): string {
   const allLocales = collectLocales(matrix);
   const scenarioIds = matrix.runs.map((r) => r.scenarioId);
 
-  const headerRow = `| Locale | ${scenarioIds.join(" | ")} |`;
+  const headerRow = `| Locale | ${scenarioIds.map(escapeCell).join(" | ")} |`;
   const separator = `|--------|${scenarioIds.map(() => "--------").join("|")}|`;
 
   const dataRows = allLocales.map((locale) => {
@@ -39,7 +48,8 @@ export function formatMarkdownMatrixReport(matrix: MatrixResult): string {
       const result = run.results.find((r) => r.locale === locale);
       if (!result) return "—";
       const cell = `${result.passed}/${result.total}`;
-      return result.status === "pass" ? `**${cell}**` : cell;
+      // Highlight failures, not passes — the reader is scanning for problems (F-35).
+      return result.status === "fail" ? `**${cell}**` : cell;
     });
     return `| ${locale} | ${cells.join(" | ")} |`;
   });

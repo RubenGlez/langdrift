@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
+// Exercise the real gate function, not a copy, so a regression in cli's
+// exit-code logic is actually caught (F-23).
+import { shouldFail } from "../src/gate.ts";
 import type { LocaleResult } from "../src/types.ts";
 
 function makeResult(
@@ -17,23 +20,6 @@ function makeResult(
     failureMode: passed === total ? null : "no_tool_call",
     detail: "",
   };
-}
-
-function shouldFail(
-  results: LocaleResult[],
-  minPassRate: number | null,
-  allowFail: string[],
-): boolean {
-  const counted = results.filter((r) => !allowFail.includes(r.locale));
-
-  if (minPassRate !== null) {
-    const totalChecks = counted.reduce((sum, r) => sum + r.total, 0);
-    const totalPassed = counted.reduce((sum, r) => sum + r.passed, 0);
-    const rate = totalChecks === 0 ? 100 : (totalPassed / totalChecks) * 100;
-    return rate < minPassRate;
-  }
-
-  return counted.some((r) => r.status === "fail");
 }
 
 const passing = makeResult("en", 1, 1);
@@ -60,7 +46,7 @@ test("allow-fail does not suppress other failing locales", () => {
 });
 
 test("min-pass-rate passes when rate is above threshold", () => {
-  // en 1/1 + sw 7/10 = 8/11 = 72.7% → fails at 70 threshold but passes at 70
+  // en 1/1 + sw 7/10 = 8/11 = 72.7%, which is above the 70 threshold → pass
   assert.equal(shouldFail([passing, partial], 70, []), false);
 });
 

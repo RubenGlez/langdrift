@@ -26,6 +26,14 @@ if [ "$BEHIND" != "0" ]; then
   exit 1
 fi
 
+# Being level-with-or-behind isn't enough: unpushed local commits would ride
+# into the tag from an unpublished state. Require the tree to be pushed first.
+AHEAD=$(git rev-list origin/main..HEAD --count)
+if [ "$AHEAD" != "0" ]; then
+  echo "Branch is $AHEAD commit(s) ahead of origin/main — push first"
+  exit 1
+fi
+
 pnpm lint
 pnpm typecheck
 pnpm test
@@ -56,7 +64,15 @@ npm version "$BUMP" --no-git-tag-version
 VERSION=$(node -p "require('./package.json').version")
 TAG="v$VERSION"
 
-git add package.json
+# The changelog ships in the package (see package.json "files"); make sure it
+# actually documents this version before tagging.
+if ! grep -q "$VERSION" CHANGELOG.md; then
+  echo "CHANGELOG.md has no entry for $VERSION — add one before releasing. Reverting version bump."
+  git checkout package.json
+  exit 1
+fi
+
+git add package.json CHANGELOG.md
 git commit -m "$TAG"
 git tag "$TAG"
 git push && git push --tags

@@ -48,7 +48,16 @@ export async function translateScenario(
   }
 
   const translations = await callLlm(enLocale.input, targetLocales, options);
-  const enExpect = serializeExpect(scenario.locales.en);
+
+  // The LLM can silently return fewer locales than requested; surface the gap
+  // instead of quietly producing a shorter scenario (F-30).
+  const returned = new Set(translations.map((t) => t.locale));
+  const dropped = targetLocales.filter((l) => !returned.has(l));
+  if (dropped.length > 0) {
+    process.stderr.write(
+      `warning: model did not return translations for: ${dropped.join(", ")}\n`,
+    );
+  }
 
   const yamlLines: string[] = [
     `# Generated locale inputs for: ${scenario.id}`,
@@ -62,7 +71,7 @@ export async function translateScenario(
     yamlLines.push(`  ${locale}:`);
     yamlLines.push(`    input: ${yamlQuote(input)}`);
     yamlLines.push(`    expect:`);
-    for (const line of enExpect) {
+    for (const line of serializeExpect(scenario.locales.en, locale)) {
       yamlLines.push(`    ${line}`);
     }
     yamlLines.push("");
@@ -136,20 +145,23 @@ Target locales: ${locales.join(", ")}`;
     .map((locale) => ({ locale, input: parsed[locale] }));
 }
 
-function serializeExpect(
+// Serializes an `expect` block back to the scenario's YAML subset. Used to copy
+// the English assertions onto each generated locale. `targetLocale` is the
+// locale the block is being generated for, so a script check can be rewritten to
+// it (F-30).
+export function serializeExpect(
   locale: import("./types.ts").ScenarioLocale,
+  targetLocale: string,
 ): string[] {
   const lines: string[] = [];
-  const { toolCall, toolCalls, noToolCall } = locale.expect;
+  const { toolCall, toolCalls, noToolCall, responseLanguage } = locale.expect;
 
   if (toolCall !== undefined && !Array.isArray(toolCall)) {
     lines.push(`  toolCall:`);
     lines.push(`    name: ${toolCall.name}`);
     if (toolCall.arguments) {
       lines.push(`    arguments:`);
-      for (const [k, v] of Object.entries(toolCall.arguments)) {
-        lines.push(`      ${k}: ${v}`);
-      }
+      lines.push(...serializeArgLines(toolCall.arguments, "      "));
     }
   } else if (Array.isArray(toolCall)) {
     lines.push(`  toolCall:`);
@@ -158,9 +170,7 @@ function serializeExpect(
       lines.push(`      - name: ${option.name}`);
       if (option.arguments) {
         lines.push(`        arguments:`);
-        for (const [k, v] of Object.entries(option.arguments)) {
-          lines.push(`          ${k}: ${v}`);
-        }
+        lines.push(...serializeArgLines(option.arguments, "          "));
       }
     }
   }
@@ -171,19 +181,45 @@ function serializeExpect(
       lines.push(`    - name: ${step.name}`);
       if (step.arguments) {
         lines.push(`      arguments:`);
-        for (const [k, v] of Object.entries(step.arguments)) {
-          lines.push(`        ${k}: ${v}`);
-        }
+        lines.push(...serializeArgLines(step.arguments, "        "));
       }
     }
   }
 
   if (noToolCall) {
     lines.push(`  noToolCall:`);
-    lines.push(`    name: ${noToolCall.name}`);
+    if (noToolCall.names.length === 1) {
+      lines.push(`    name: ${noToolCall.names[0]}`);
+    } else {
+      lines.push(`    anyOf: [${noToolCall.names.join(", ")}]`);
+    }
+  }
+
+  // If the source asserts a response script, assert the target locale's script
+  // on the generated block — the one assertion translate can add for free (F-30).
+  if (responseLanguage) {
+    lines.push(`  responseLanguage: ${targetLocale}`);
   }
 
   return lines;
+}
+
+// Serializes tool-argument matchers. A `oneOf` matcher becomes a nested inline
+// list instead of stringifying to `[object Object]` (F-31).
+function serializeArgLines(
+  args: Record<string, import("./types.ts").ArgMatcher>,
+  keyIndent: string,
+): string[] {
+  const out: string[] = [];
+  for (const [k, v] of Object.entries(args)) {
+    if (typeof v === "object" && v !== null && "oneOf" in v) {
+      out.push(`${keyIndent}${k}:`);
+      out.push(`${keyIndent}  oneOf: [${v.oneOf.join(", ")}]`);
+    } else {
+      out.push(`${keyIndent}${k}: ${v}`);
+    }
+  }
+  return out;
 }
 
 function appendLocalesToYaml(source: string, snippet: string): string {

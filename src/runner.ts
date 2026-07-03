@@ -22,6 +22,7 @@ export async function runScenario(
   scenario: Scenario,
   target: string,
   iterations: number,
+  timeoutMs?: number,
 ): Promise<RunResult> {
   const localeIterations: Record<string, IterationRecord[]> = {};
 
@@ -36,12 +37,16 @@ export async function runScenario(
         scenarioId: scenario.id,
         locale,
         input: variant.input,
+        agent: scenario.agent,
+        timeoutMs,
       });
 
       if (!targetResult.ok) {
+        // Transport/harness failures get their own mode so an agent outage or a
+        // malformed response isn't miscounted as model drift (F-5, F-21).
         localeIterations[locale].push({
           status: "fail",
-          failureMode: "no_tool_call",
+          failureMode: "target_error",
           detail: targetResult.detail,
         });
         continue;
@@ -87,27 +92,40 @@ export async function runScenarios(
   scenarioPaths: string[],
   target: string,
   iterations: number,
+  timeoutMs?: number,
 ): Promise<MatrixResult> {
   const runs: RunResult[] = [];
 
   for (const path of scenarioPaths) {
     const scenario = await loadScenario(path);
-    runs.push(await runScenario(scenario, target, iterations));
+    runs.push(await runScenario(scenario, target, iterations, timeoutMs));
   }
 
   return { target, iterations, runs };
 }
 
-export async function resolveScenarioPaths(path: string): Promise<string[]> {
+// Resolves a run input to the scenario files it covers, and reports whether the
+// input was a directory. The directory flag lets the CLI pick the report schema
+// by input kind rather than by file count, so a directory that happens to hold
+// one file still emits the matrix shape (F-20).
+export type ResolvedScenarioPaths = {
+  paths: string[];
+  isDirectory: boolean;
+};
+
+export async function resolveScenarioPaths(
+  path: string,
+): Promise<ResolvedScenarioPaths> {
   try {
     const entries = await readdir(path);
-    return entries
+    const paths = entries
       .filter((name) => name.endsWith(".yaml") || name.endsWith(".yml"))
       .map((name) => join(path, name))
       .sort();
+    return { paths, isDirectory: true };
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOTDIR") {
-      return [path];
+      return { paths: [path], isDirectory: false };
     }
     throw err;
   }

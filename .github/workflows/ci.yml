@@ -24,4 +24,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      # Build the artifact npm actually ships and confirm the compiled bin runs;
+      # otherwise a build-only breakage merges green and only surfaces at release (F-37).
+      - run: pnpm build && node dist/cli.js --version
       - run: pnpm audit --audit-level=high --prod

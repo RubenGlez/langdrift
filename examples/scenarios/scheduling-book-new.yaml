@@ -101,7 +101,7 @@ locales:
         name: reschedule_appointment
 
   yo:
-    input: "Ẹ káàárọ̀, mo jẹ́ oníbàárà tuntun àti pé mo fẹ́ ṣètò ìpàdé àkọ́kọ́ mi ní òwúrọ̀ ọjọ́ Àìkú."
+    input: "Ẹ káàárọ̀, mo jẹ́ oníbàárà tuntun àti pé mo fẹ́ ṣètò ìpàdé àkọ́kọ́ mi ní òwúrọ̀ ọjọ́ Ajé."
     expect:
       toolCall:
         name: check_availability

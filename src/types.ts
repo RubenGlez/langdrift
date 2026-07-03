@@ -6,11 +6,9 @@ export type Scenario = {
 
 // An expected argument value: a scalar compared with scalar-normalized
 // equality, or a `oneOf` list that matches if the actual value equals any option.
-export type ArgMatcher =
-  | string
-  | number
-  | boolean
-  | { oneOf: Array<string | number | boolean> };
+// The scenario parser only ever produces strings; the CLI has no programmatic
+// surface, so there are no other producers to model here.
+export type ArgMatcher = string | { oneOf: string[] };
 
 export type ToolCallAssertion = {
   name: string;
@@ -23,7 +21,7 @@ export type ScenarioLocale = {
     toolCall?: ToolCallAssertion | ToolCallAssertion[]; // single or anyOf
     toolCalls?: ToolCallAssertion[]; // ordered sequence
     noToolCall?: {
-      name: string;
+      names: string[]; // one or more forbidden tool names
     };
     responseLanguage?: string; // BCP-47 locale code; checks response text is in that language
   };
@@ -40,15 +38,21 @@ export type TargetResponse = {
   structured: unknown;
 };
 
-export type FailureMode =
-  | "no_tool_call"
-  | "wrong_tool"
-  | "wrong_argument"
-  | "missing_argument"
-  | "forbidden_tool"
-  | "wrong_sequence"
-  | "wrong_language"
-  | null;
+// The single source of truth for behavioral failure modes. Anything that
+// aggregates by failure mode (the benchmark, reports) derives its column set
+// from this array so a new mode can never silently vanish from a table.
+export const FAILURE_MODES = [
+  "no_tool_call",
+  "wrong_tool",
+  "wrong_argument",
+  "missing_argument",
+  "forbidden_tool",
+  "wrong_sequence",
+  "wrong_language",
+  "target_error", // the harness/transport failed, not the model — kept out of behavioral stats
+] as const;
+
+export type FailureMode = (typeof FAILURE_MODES)[number] | null;
 
 export type LocaleResult = {
   locale: string;

@@ -75,8 +75,11 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
+      # Wait on the TCP port, not the POST endpoint: the agent route only
+      # answers POST, so an HTTP GET probe against it 404s and times out even
+      # when the agent is up. Use tcp: (or a GET health route if your agent has one).
       - name: Wait for agent
-        run: npx wait-on http://127.0.0.1:3010/api/agent --timeout 15000
+        run: npx wait-on tcp:127.0.0.1:3010 --timeout 15000
 
       - name: Run locale eval
         run: |

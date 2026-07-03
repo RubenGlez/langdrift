@@ -14,6 +14,9 @@ import {
 } from "./reportMarkdown.ts";
 import { formatLintReport, lintScenarios } from "./lint.ts";
 import { DEFAULT_LOCALES, translateScenario } from "./translate.ts";
+import { shouldFail } from "./gate.ts";
+
+const COMMANDS = new Set(["run", "init", "lint", "translate"]);
 
 type CliOptions = RunOptions | InitOptions | LintOptions | TranslateOptions;
 
@@ -25,6 +28,7 @@ type RunOptions = {
   format: "text" | "json" | "markdown";
   minPassRate: number | null;
   allowFail: string[];
+  timeoutMs: number | null;
 };
 
 type InitOptions = {
@@ -48,14 +52,19 @@ type TranslateOptions = {
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
-  if (args.includes("--help") || args.includes("-h")) {
-    process.stdout.write(`${usage()}\n`);
-    return;
-  }
+  // Only treat --help/--version as global when they aren't riding inside a real
+  // command; otherwise `run s.yaml --target x -v` would silently print the
+  // version and exit 0 in a CI script (F-18).
+  if (!COMMANDS.has(args[0] ?? "")) {
+    if (args.includes("--help") || args.includes("-h")) {
+      process.stdout.write(`${usage()}\n`);
+      return;
+    }
 
-  if (args.includes("--version") || args.includes("-v")) {
-    process.stdout.write(`${readPackageVersion()}\n`);
-    return;
+    if (args.includes("--version") || args.includes("-v")) {
+      process.stdout.write(`${readPackageVersion()}\n`);
+      return;
+    }
   }
 
   const options = parseArgs(args);
@@ -67,7 +76,7 @@ async function main(): Promise<void> {
   }
 
   if (options.command === "lint") {
-    const paths = await resolveScenarioPaths(options.scenarioPath);
+    const { paths } = await resolveScenarioPaths(options.scenarioPath);
     if (paths.length === 0) {
       throw new Error(`No scenario files found at ${options.scenarioPath}`);
     }
@@ -100,19 +109,25 @@ async function main(): Promise<void> {
     return;
   }
 
-  const paths = await resolveScenarioPaths(options.scenarioPath);
+  const { paths, isDirectory } = await resolveScenarioPaths(
+    options.scenarioPath,
+  );
 
   if (paths.length === 0) {
     throw new Error(`No scenario files found at ${options.scenarioPath}`);
   }
 
-  const isMatrix = paths.length > 1;
+  const timeoutMs = options.timeoutMs ?? undefined;
 
-  if (isMatrix) {
+  // Directory input always emits the matrix shape, even for a single file, so
+  // downstream tooling parsing `runs[]` doesn't break when a directory shrinks
+  // to one scenario (F-20).
+  if (isDirectory) {
     const matrix = await runScenarios(
       paths,
       options.target,
       options.iterations,
+      timeoutMs,
     );
 
     if (options.format === "json") {
@@ -124,12 +139,18 @@ async function main(): Promise<void> {
     }
 
     const allResults = matrix.runs.flatMap((run) => run.results);
+    warnUnknownAllowFail(options.allowFail, allResults);
     if (shouldFail(allResults, options.minPassRate, options.allowFail)) {
       process.exitCode = 1;
     }
   } else {
     const scenario = await loadScenario(paths[0]);
-    const run = await runScenario(scenario, options.target, options.iterations);
+    const run = await runScenario(
+      scenario,
+      options.target,
+      options.iterations,
+      timeoutMs,
+    );
 
     if (options.format === "json") {
       process.stdout.write(formatJsonReport(run));
@@ -139,27 +160,27 @@ async function main(): Promise<void> {
       process.stdout.write(formatTerminalReport(run));
     }
 
+    warnUnknownAllowFail(options.allowFail, run.results);
     if (shouldFail(run.results, options.minPassRate, options.allowFail)) {
       process.exitCode = 1;
     }
   }
 }
 
-function shouldFail(
-  results: import("./types.ts").LocaleResult[],
-  minPassRate: number | null,
+// A mistyped --allow-fail locale (e.g. `ue` for `eu`) filters nothing and lets
+// the build fail with no hint; warn when it matches no locale in the run (F-19).
+function warnUnknownAllowFail(
   allowFail: string[],
-): boolean {
-  const counted = results.filter((r) => !allowFail.includes(r.locale));
-
-  if (minPassRate !== null) {
-    const totalChecks = counted.reduce((sum, r) => sum + r.total, 0);
-    const totalPassed = counted.reduce((sum, r) => sum + r.passed, 0);
-    const rate = totalChecks === 0 ? 100 : (totalPassed / totalChecks) * 100;
-    return rate < minPassRate;
+  results: import("./types.ts").LocaleResult[],
+): void {
+  const present = new Set(results.map((r) => r.locale));
+  for (const locale of allowFail) {
+    if (!present.has(locale)) {
+      process.stderr.write(
+        `warning: --allow-fail ${locale} matches no locale in the run\n`,
+      );
+    }
   }
-
-  return counted.some((r) => r.status === "fail");
 }
 
 function parseArgs(args: string[]): CliOptions {
@@ -218,6 +239,10 @@ function parseArgs(args: string[]): CliOptions {
     minPassRateIndex === -1 ? null : args[minPassRateIndex + 1];
   const minPassRate = minPassRateRaw === null ? null : Number(minPassRateRaw);
 
+  const timeoutIndex = args.indexOf("--timeout");
+  const timeoutRaw = timeoutIndex === -1 ? null : args[timeoutIndex + 1];
+  const timeoutMs = timeoutRaw === null ? null : Number(timeoutRaw);
+
   const allowFail: string[] = [];
   for (let i = 0; i < args.length; i += 1) {
     if (
@@ -232,12 +257,17 @@ function parseArgs(args: string[]): CliOptions {
   if (
     !scenarioPath ||
     scenarioPath.startsWith("--") ||
+    // A target that is itself a flag means `--target` swallowed the next flag
+    // (e.g. `--target --format`); reject rather than run against a bogus URL (F-18).
     !target ||
+    target.startsWith("--") ||
+    !isValidUrl(target) ||
     (format !== "text" && format !== "json" && format !== "markdown") ||
     !Number.isInteger(iterations) ||
     iterations < 1 ||
     (minPassRate !== null &&
-      (Number.isNaN(minPassRate) || minPassRate < 0 || minPassRate > 100))
+      (Number.isNaN(minPassRate) || minPassRate < 0 || minPassRate > 100)) ||
+    (timeoutMs !== null && (!Number.isInteger(timeoutMs) || timeoutMs < 1))
   ) {
     throw new Error(usage());
   }
@@ -250,7 +280,17 @@ function parseArgs(args: string[]): CliOptions {
     format,
     minPassRate,
     allowFail,
+    timeoutMs,
   };
+}
+
+function isValidUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 function parseInitPath(args: string[]): string {
@@ -272,7 +312,7 @@ function usage(): string {
   return [
     "Usage:",
     `  langdrift init [scenario.yaml] [--template ${INIT_TEMPLATES.join("|")}]`,
-    "  langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown] [--min-pass-rate N] [--allow-fail <locale>]",
+    "  langdrift run <scenario.yaml|dir> --target <url> [--iterations N] [--format text|json|markdown] [--min-pass-rate N] [--allow-fail <locale>] [--timeout MS]",
     "  langdrift lint <scenario.yaml|dir>",
     "  langdrift translate <scenario.yaml> [--locales fr,ar,zh,...] [--write]",
   ].join("\n");

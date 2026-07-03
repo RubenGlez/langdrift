@@ -25,6 +25,13 @@ const apiKey = resolveApiKey(provider);
 const tools = loadTools(domain);
 
 const server = createServer(async (request, response) => {
+  // Readiness probe: a GET that returns 2xx so `wait-on http://.../health`
+  // succeeds. The agent endpoint only answers POST, so probing it 404s (F-32).
+  if (request.method === "GET" && request.url === "/health") {
+    sendJson(response, 200, { status: "ok" });
+    return;
+  }
+
   if (request.method !== "POST" || request.url !== "/api/agent") {
     sendJson(response, 404, { error: "not found" });
     return;

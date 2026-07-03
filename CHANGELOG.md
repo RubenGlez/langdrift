@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- `target_error` failure mode: transport failures (network error, non-2xx, malformed or non-JSON response, timeout) are now classified separately from the behavioral `no_tool_call` mode, so an agent outage is no longer counted as locale drift.
+- `--timeout MS` flag on `run` (default 30000); a hung locale is recorded as `target_error` instead of stalling the whole run.
+- `noToolCall` can forbid multiple tools via `anyOf: [a, b]`.
+- `translate` now emits `responseLanguage` for the target locale (when the source asserts one) and warns when the model returns fewer locales than requested.
+- `lint` flags duplicate scenario ids across a directory and `responseLanguage` values whose script cannot be determined (the check can never fail).
+- The CLI JSON report includes a 95% Wilson confidence interval per locale.
+
+### Changed
+- `responseLanguage`: `ja` now requires kana so pure-Chinese text no longer passes; the non-Latin detector covers every script in the table (including Georgian and Ethiopic); the measured in-script ratio is included in the `detail`.
+- Directory input always emits the matrix report shape, even for a single file.
+- Markdown run report includes a `Detail` column; the matrix highlights failing cells instead of passing ones and escapes `|` in cell values.
+- The `agent:` field is now sent in the POST body to the target as routing metadata.
+- Minimum Node version relaxed to `>=22`.
+
+### Fixed
+- Scalar argument assertions no longer let a non-scalar (array/object/null) pass via `String()` coercion.
+- Scenario parser: `oneOf` items with quoted commas parse correctly; duplicate locale keys, nameless tool-call list items, tab/odd indentation, and block scalars are rejected with line-numbered errors; an empty `noToolCall:` no longer absorbs a sibling's `name:`.
+- `translate` serializes `oneOf` matchers correctly instead of `[object Object]`.
+- `--allow-fail` warns when a value matches no locale; `-v`/`-h` no longer hijack a `run` invocation; the target URL is validated.
+- CI now builds the compiled artifact and runs it.
+
 ## [0.3.1] - 2026-06-25
 
 ### Fixed

@@ -1,4 +1,13 @@
-import type { MatrixResult, RunResult } from "./types.ts";
+import { wilsonInterval } from "./stats.ts";
+import type { LocaleResult, MatrixResult, RunResult } from "./types.ts";
+
+// Strip the raw response and attach a 95% Wilson confidence interval computed
+// from this locale's pass count, so the tool's own report carries the CIs the
+// research writeup relies on (F-15).
+function serializeLocaleResult(result: LocaleResult) {
+  const { response: _response, ...rest } = result;
+  return { ...rest, ci: wilsonInterval(result.passed, result.total) };
+}
 
 export function formatJsonReport(run: RunResult): string {
   const failedLocales = run.results.filter((r) => r.status === "fail").length;
@@ -18,7 +27,7 @@ export function formatJsonReport(run: RunResult): string {
         totalRuns: run.results.reduce((sum, r) => sum + r.total, 0),
         totalPassed: run.results.reduce((sum, r) => sum + r.passed, 0),
       },
-      results: run.results.map(({ response: _response, ...rest }) => rest),
+      results: run.results.map(serializeLocaleResult),
     },
     null,
     2,
@@ -57,7 +66,7 @@ export function formatJsonMatrixReport(matrix: MatrixResult): string {
         status: run.results.every((r) => r.status === "pass")
           ? "passed"
           : "failed",
-        results: run.results.map(({ response: _response, ...rest }) => rest),
+        results: run.results.map(serializeLocaleResult),
       })),
     },
     null,

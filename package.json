@@ -27,6 +27,7 @@
     "examples/scenarios/",
     "examples/benchmark/results/",
     "RESEARCH.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "bin": {
@@ -57,7 +58,7 @@
     "benchmark:all:anthropic": "ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:support && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:support-cancel && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:ecommerce && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:ecommerce-track && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:scheduling && ITERATIONS=10 MODEL_PROVIDER=anthropic MODEL_NAME=claude-haiku-4-5-20251001 pnpm benchmark:scheduling-book"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=22"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",

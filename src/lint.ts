@@ -1,3 +1,4 @@
+import { isScriptDeterminable } from "./assertions.ts";
 import { loadScenario } from "./scenario.ts";
 import type { Scenario } from "./types.ts";
 
@@ -47,12 +48,48 @@ export async function lintScenarios(paths: string[]): Promise<LintResult[]> {
           message: `no "en" locale; English is typically used as the baseline`,
         });
       }
+
+      // A responseLanguage whose script LangDrift can't determine always passes,
+      // so the assertion can never fail — flag it as a silent no-op (F-29).
+      for (const [locale, variant] of Object.entries(scenario.locales)) {
+        const lang = variant.expect.responseLanguage;
+        if (lang && !isScriptDeterminable(lang)) {
+          issues.push({
+            severity: "warning",
+            message: `locale "${locale}": responseLanguage "${lang}" is not script-determinable, so the check can never fail`,
+          });
+        }
+      }
     }
 
     loaded.push({ path, scenario, issues });
   }
 
   if (paths.length > 1) {
+    // Two files sharing a scenario id collide in matrix reports keyed by
+    // scenarioId; flag it as an error (F-24).
+    const idToPaths = new Map<string, string[]>();
+    for (const { path, scenario } of loaded) {
+      if (!scenario) continue;
+      const existing = idToPaths.get(scenario.id) ?? [];
+      existing.push(path);
+      idToPaths.set(scenario.id, existing);
+    }
+    for (const [id, idPaths] of idToPaths) {
+      if (idPaths.length > 1) {
+        for (const { path, issues } of loaded) {
+          if (idPaths.includes(path)) {
+            issues.push({
+              severity: "error",
+              message: `duplicate scenario id "${id}" also defined in ${idPaths
+                .filter((p) => p !== path)
+                .join(", ")}`,
+            });
+          }
+        }
+      }
+    }
+
     const localeSetByPath = new Map<string, Set<string>>();
     for (const { path, scenario } of loaded) {
       if (scenario) {

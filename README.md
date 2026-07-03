@@ -113,6 +113,8 @@ locales:
       responseLanguage: fr
 ```
 
+Scenario files are a **strict 2-space-indented subset of YAML**, not full YAML. Use exactly two spaces per level (no tabs), and keep every value on one line — block scalars (`input: |`), flow mappings, and multi-line strings are not supported. Out-of-subset input is rejected with a line-numbered error rather than parsed loosely. Run `langdrift lint` to catch these and other issues early.
+
 Run it against your agent:
 
 ```bash
@@ -150,9 +152,25 @@ expect:
 
 `oneOf` is an inline list and must contain at least one value; `langdrift lint` reports an error otherwise.
 
+### Forbidden tools
+
+`noToolCall` fails the locale if the agent calls a tool it should not. Forbid one tool with `name`, or several with `anyOf`:
+
+```yaml
+expect:
+  toolCall:
+    name: create_refund_ticket
+  noToolCall:
+    anyOf: [escalate_to_human, contact_seller]
+```
+
 ### Response script
 
-`responseLanguage` is a **script-family check**, not language detection. It confirms a reply uses the script a locale is written in (for example, that an `ar` reply is in Arabic script). It cannot distinguish languages that share a script: a `fr` assertion passes for any Latin-script reply, and `ar` cannot be told apart from `fa` or `ur`. For a locale whose script LangDrift cannot determine, the check passes rather than guessing.
+`responseLanguage` is a **script-family check**, not language detection. It confirms a reply uses the script a locale is written in (for example, that an `ar` reply is in Arabic script). Know its limits before relying on it:
+
+- **It cannot distinguish languages that share a script.** A `fr` assertion passes for any Latin-script reply; `ar` cannot be told apart from `fa` or `ur`; `zh` accepts any Han text. The one Han exception is `ja`, which additionally requires kana, so pure-Chinese text does not pass `responseLanguage: ja`.
+- **The thresholds are asymmetric.** A non-Latin locale passes when at least 10% of letters are in its script; a Latin locale fails only when more than 50% of letters are non-Latin. The measured ratio is included in the failure/pass `detail` so near-misses are visible.
+- **For a locale whose script LangDrift cannot determine, the check passes** rather than guessing. `langdrift lint` warns when a `responseLanguage` value is not script-determinable, since the check can then never fail.
 
 ## HTTP Target Contract
 
@@ -164,9 +182,12 @@ Request:
 {
   "locale": "fr",
   "input": "J'ai été facturé deux fois. Pouvez-vous me rembourser un paiement?",
-  "scenarioId": "refund_request"
+  "scenarioId": "refund_request",
+  "agent": "support"
 }
 ```
+
+`agent` is the scenario's `agent:` field, sent as routing metadata; agents that serve one workflow can ignore it.
 
 Response:
 
@@ -209,8 +230,11 @@ langdrift translate <scenario.yaml> [--locales fr,ar,zh,...] [--write]
 Useful CI flags:
 
 - `--min-pass-rate N`: fail only if the overall pass rate is below `N`.
-- `--allow-fail <locale>`: keep reporting a known weak locale without letting it fail the build.
+- `--allow-fail <locale>`: keep reporting a known weak locale without letting it fail the build. A value that matches no locale prints a warning.
 - `--format markdown`: write a table suitable for GitHub Actions summaries or PR comments.
+- `--timeout MS`: per-request timeout (default 30000). A hung locale is recorded as `target_error` instead of stalling the run.
+
+A transport failure (network error, non-2xx, malformed or non-JSON response, or timeout) is classified as `target_error`, distinct from the behavioral `no_tool_call` mode, so an agent outage is not mistaken for locale drift.
 
 See [docs/ci.md](docs/ci.md) for GitHub Actions examples.
 
@@ -246,7 +270,8 @@ langdrift run ./examples/scenarios/support-routing.yaml --target http://127.0.0.
 - **Behavior over text.** LangDrift checks tool calls and structured behavior, not whether a reply sounds fluent.
 - **Deterministic assertions first.** No LLM-as-judge in the core loop; failures are explainable and CI-friendly.
 - **HTTP contract over framework lock-in.** Any agent that can accept one POST request can be tested.
-- **Small, inspectable core.** Zero runtime dependencies, TypeScript source, Node >= 24.
+- **Small, inspectable core.** Zero runtime dependencies, TypeScript source, Node >= 22.
+- **CLI, not a library.** The published package exposes the `langdrift` command only; there is no importable JavaScript API. To reuse the internals, work from a clone of the TypeScript source.
 - **Demo without API keys.** The fake agent makes the failure mode visible locally before connecting a real model.
 
 ## More Context

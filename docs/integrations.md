@@ -171,4 +171,4 @@ app.listen({ port: 3010 });
 
 **`scenarioId` is informational.** LangDrift sends it so your agent can log or branch on it. Most adapters can ignore it.
 
-**Non-2xx responses fail the locale.** If your handler throws or returns a non-2xx status, LangDrift records it as `no_tool_call` with the HTTP status as the detail.
+**Non-2xx responses fail the locale.** If your handler throws or returns a non-2xx status, LangDrift records it as `target_error` (a transport failure, kept distinct from behavioral modes like `no_tool_call`) with the HTTP status as the detail. A malformed or non-JSON 2xx body is also a `target_error`.

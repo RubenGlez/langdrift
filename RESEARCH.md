@@ -16,6 +16,8 @@ I built a minimal eval harness and ran scenarios across 3 domains and 12 locales
 - 10 iterations per scenario for each model
 - English baseline confirmed before any other locale was tested
 
+In the tables below, **Failing locale checks** lists *every* cell below 10/10, ordered worst first (fewest passes first); a cell not listed passed all 10 iterations. Per-cell 95% Wilson confidence intervals for every failing cell are in the [appendix](#appendix-per-cell-confidence-intervals).
+
 **Results — gpt-4o-mini (10 iterations × 12 locales):**
 
 | Scenario | Pass rate | Failing locale checks |
@@ -31,22 +33,22 @@ I built a minimal eval harness and ran scenarios across 3 domains and 12 locales
 
 | Scenario | Pass rate | Failing locale checks |
 | -------- | --------- | ------------------- |
-| support-routing | 59% (71/120) | mn (1/10), sw (3/10), yo (3/10), vi (4/10), cy (5/10), eu (5/10), zh (6/10) |
-| support-cancel-subscription | 68% (82/120) | yo (0/10), sw (1/10), mn (2/10), eu (4/10), cy (6/10) |
-| ecommerce-cancel-order | 69% (83/120) | yo (0/10), cy (1/10), eu (2/10), zh (6/10), mn (6/10) |
-| ecommerce-track-order | 46% (55/120) | mn (0/10), cy (1/10), eu (1/10), en (3/10), sw (4/10) |
-| scheduling-reschedule | 88% (106/120) | sw (4/10), eu (7/10), mn (8/10) |
-| scheduling-book-new | 40% (48/120) | id (0/10), sw (0/10), cy (0/10), fr (2/10), ar (4/10) |
+| support-routing | 59% (71/120) | mn (1/10), sw (3/10), yo (3/10), vi (4/10), cy (5/10), eu (5/10), zh (6/10), id (7/10), ru (8/10), ar (9/10) |
+| support-cancel-subscription | 68% (82/120) | yo (0/10), sw (1/10), mn (2/10), eu (4/10), cy (6/10), zh (9/10) |
+| ecommerce-cancel-order | 69% (83/120) | yo (0/10), cy (1/10), eu (2/10), zh (6/10), mn (6/10), vi (9/10), sw (9/10) |
+| ecommerce-track-order | 46% (55/120) | mn (0/10), cy (1/10), eu (1/10), zh (2/10), en (3/10), sw (4/10), id (5/10), fr (7/10), ar (8/10), ru (8/10), vi (8/10), yo (8/10) |
+| scheduling-reschedule | 88% (106/120) | sw (4/10), eu (7/10), mn (8/10), en (9/10), zh (9/10), cy (9/10) |
+| scheduling-book-new | 40% (48/120) | id (0/10), sw (0/10), cy (0/10), fr (2/10), ar (4/10), vi (4/10), eu (4/10), yo (4/10), zh (6/10), mn (7/10), ru (8/10), en (9/10) |
 
 **Results — DeepSeek deepseek-chat (10 iterations × 12 locales):**
 
 | Scenario | Pass rate | Failing locale checks |
 | -------- | --------- | ------------------- |
-| support-routing | 84% (101/120) | mn (1/10), cy (2/10), sw (9/10), zh (9/10) |
-| support-cancel-subscription | 62% (74/120) | zh (0/10), eu (0/10), sw (1/10), id (2/10), ar (3/10) |
-| ecommerce-cancel-order | 57% (69/120) | zh (0/10), ru (0/10), eu (0/10), yo (0/10), sw (3/10), en (8/10) |
-| ecommerce-track-order | 42% (50/120) | ar (0/10), zh (0/10), vi (0/10), sw (0/10), fr (1/10), yo (1/10), mn (3/10) |
-| scheduling-reschedule | 64% (77/120) | ar (0/10), zh (0/10), sw (0/10, wrong tool), id (1/10), mn (8/10) |
+| support-routing | 84% (101/120) | mn (1/10, wrong_tool), cy (2/10, wrong_tool), sw (9/10, wrong_tool), zh (9/10) |
+| support-cancel-subscription | 62% (74/120) | zh (0/10), eu (0/10), sw (1/10), id (2/10), ar (3/10), cy (9/10), yo (9/10) |
+| ecommerce-cancel-order | 57% (69/120) | zh (0/10), ru (0/10), eu (0/10), yo (0/10), sw (3/10), en (8/10), cy (9/10), mn (9/10) |
+| ecommerce-track-order | 42% (50/120) | ar (0/10), zh (0/10), vi (0/10), sw (0/10), fr (1/10), yo (1/10), mn (3/10), id (6/10), eu (9/10) |
+| scheduling-reschedule | 64% (77/120) | ar (0/10), zh (0/10), sw (0/10, wrong_tool), id (1/10), mn (8/10), eu (9/10), yo (9/10) |
 | scheduling-book-new | 93% (112/120) | eu (2/10) |
 
 English is not a perfect baseline on every model. It passes every scenario on gpt-4o-mini except the model-behavior divergence in `scheduling-book-new`, while claude-haiku misses `ecommerce-track-order` in 7/10 runs and DeepSeek misses `ecommerce-cancel-order` in 2/10 runs. That matters: LangDrift surfaces both locale drift and scenario/model reliability issues.
@@ -57,7 +59,7 @@ This is an applied experiment, not a scientific claim.
 
 **Three models, one architecture.** The benchmark now covers gpt-4o-mini, claude-haiku-4-5-20251001, and DeepSeek deepseek-chat via the same HTTP agent wrapper with the same system prompt and tool set. Cross-model patterns (Basque, Yoruba, low-resource language clusters) are therefore more credible than when a single model was used. However, the agent architecture is still simple: single-turn, 5 tools per domain, no RAG, no multi-turn context. More complex setups may show different failure patterns.
 
-**Small sample, reported with uncertainty.** Each scenario/model/locale cell uses 10 iterations. The agent runs at `temperature 0`, so these iterations are near-deterministic: they capture API-side variance, not a sampling distribution. N=10 is enough to expose repeated failure patterns but is not a large-sample statistical benchmark, and a single 7/10-vs-9/10 difference is well within noise. The benchmark report now prints a 95% Wilson confidence interval per locale, and per-cell pass rates throughout this document should be read as estimates with that uncertainty, not exact rankings.
+**Small sample, reported with uncertainty.** Each scenario/model/locale cell uses 10 iterations. The agent runs at `temperature 0`, so these iterations are near-deterministic: they capture API-side variance, not a sampling distribution. N=10 is enough to expose repeated failure patterns but is not a large-sample statistical benchmark, and a single 7/10-vs-9/10 difference is well within noise. The [appendix](#appendix-per-cell-confidence-intervals) gives a 95% Wilson confidence interval for every failing cell, computed directly from the committed pass counts (the CLI's own `--format json` report also emits these intervals per locale). Per-cell pass rates throughout this document should be read as estimates with that uncertainty, not exact rankings.
 
 **Unreviewed locale prompts.** The locale inputs were written by one author to preserve intent but were not reviewed by native speakers. Some failures may reflect phrasing gaps rather than model behavior. This is acknowledged as a real threat to validity, but native review at scale is not practical for a solo project. Results should be interpreted with that caveat explicitly in mind.
 
@@ -144,3 +146,128 @@ LangDrift is the harness I used for this experiment, cleaned up and made general
 - Exits non-zero on failure, so it works in CI
 
 The goal is to let any team run localized behavior checks against their own agents, not just refund routing, but any workflow where the right behavior matters across languages.
+
+## Appendix: per-cell confidence intervals
+
+95% Wilson score intervals for every failing cell (any cell below 10/10), computed from the committed pass counts in `examples/benchmark/results/`. Cells not listed passed all 10 iterations; a 10/10 cell has the interval [0.72, 1.00] at N=10. These are presentation over the same committed data, not a rerun.
+
+### gpt-4o-mini
+
+| Scenario | Locale | Pass | 95% CI |
+| -------- | ------ | ---- | ------ |
+| ecommerce-cancel-order | eu | 0/10 | [0.00, 0.28] |
+| ecommerce-track-order | — | — | — |
+| scheduling-book-new | en | 0/10 | [0.00, 0.28] |
+|  | fr | 0/10 | [0.00, 0.28] |
+|  | ar | 0/10 | [0.00, 0.28] |
+|  | zh | 0/10 | [0.00, 0.28] |
+|  | ru | 0/10 | [0.00, 0.28] |
+|  | id | 0/10 | [0.00, 0.28] |
+|  | vi | 0/10 | [0.00, 0.28] |
+|  | sw | 0/10 | [0.00, 0.28] |
+|  | cy | 0/10 | [0.00, 0.28] |
+|  | eu | 0/10 | [0.00, 0.28] |
+|  | mn | 0/10 | [0.00, 0.28] |
+|  | yo | 0/10 | [0.00, 0.28] |
+| scheduling-reschedule | eu | 0/10 | [0.00, 0.28] |
+| support-cancel-subscription | — | — | — |
+| support-routing | — | — | — |
+
+### claude-haiku-4-5-20251001
+
+| Scenario | Locale | Pass | 95% CI |
+| -------- | ------ | ---- | ------ |
+| ecommerce-cancel-order | yo | 0/10 | [0.00, 0.28] |
+|  | cy | 1/10 | [0.02, 0.40] |
+|  | eu | 2/10 | [0.06, 0.51] |
+|  | zh | 6/10 | [0.31, 0.83] |
+|  | mn | 6/10 | [0.31, 0.83] |
+|  | vi | 9/10 | [0.60, 0.98] |
+|  | sw | 9/10 | [0.60, 0.98] |
+| ecommerce-track-order | mn | 0/10 | [0.00, 0.28] |
+|  | cy | 1/10 | [0.02, 0.40] |
+|  | eu | 1/10 | [0.02, 0.40] |
+|  | zh | 2/10 | [0.06, 0.51] |
+|  | en | 3/10 | [0.11, 0.60] |
+|  | sw | 4/10 | [0.17, 0.69] |
+|  | id | 5/10 | [0.24, 0.76] |
+|  | fr | 7/10 | [0.40, 0.89] |
+|  | ar | 8/10 | [0.49, 0.94] |
+|  | ru | 8/10 | [0.49, 0.94] |
+|  | vi | 8/10 | [0.49, 0.94] |
+|  | yo | 8/10 | [0.49, 0.94] |
+| scheduling-book-new | id | 0/10 | [0.00, 0.28] |
+|  | sw | 0/10 | [0.00, 0.28] |
+|  | cy | 0/10 | [0.00, 0.28] |
+|  | fr | 2/10 | [0.06, 0.51] |
+|  | ar | 4/10 | [0.17, 0.69] |
+|  | vi | 4/10 | [0.17, 0.69] |
+|  | eu | 4/10 | [0.17, 0.69] |
+|  | yo | 4/10 | [0.17, 0.69] |
+|  | zh | 6/10 | [0.31, 0.83] |
+|  | mn | 7/10 | [0.40, 0.89] |
+|  | ru | 8/10 | [0.49, 0.94] |
+|  | en | 9/10 | [0.60, 0.98] |
+| scheduling-reschedule | sw | 4/10 | [0.17, 0.69] |
+|  | eu | 7/10 | [0.40, 0.89] |
+|  | mn | 8/10 | [0.49, 0.94] |
+|  | en | 9/10 | [0.60, 0.98] |
+|  | zh | 9/10 | [0.60, 0.98] |
+|  | cy | 9/10 | [0.60, 0.98] |
+| support-cancel-subscription | yo | 0/10 | [0.00, 0.28] |
+|  | sw | 1/10 | [0.02, 0.40] |
+|  | mn | 2/10 | [0.06, 0.51] |
+|  | eu | 4/10 | [0.17, 0.69] |
+|  | cy | 6/10 | [0.31, 0.83] |
+|  | zh | 9/10 | [0.60, 0.98] |
+| support-routing | mn | 1/10 | [0.02, 0.40] |
+|  | sw | 3/10 | [0.11, 0.60] |
+|  | yo | 3/10 | [0.11, 0.60] |
+|  | vi | 4/10 | [0.17, 0.69] |
+|  | cy | 5/10 | [0.24, 0.76] |
+|  | eu | 5/10 | [0.24, 0.76] |
+|  | zh | 6/10 | [0.31, 0.83] |
+|  | id | 7/10 | [0.40, 0.89] |
+|  | ru | 8/10 | [0.49, 0.94] |
+|  | ar | 9/10 | [0.60, 0.98] |
+
+### DeepSeek deepseek-chat
+
+| Scenario | Locale | Pass | 95% CI |
+| -------- | ------ | ---- | ------ |
+| ecommerce-cancel-order | zh | 0/10 | [0.00, 0.28] |
+|  | ru | 0/10 | [0.00, 0.28] |
+|  | eu | 0/10 | [0.00, 0.28] |
+|  | yo | 0/10 | [0.00, 0.28] |
+|  | sw | 3/10 | [0.11, 0.60] |
+|  | en | 8/10 | [0.49, 0.94] |
+|  | cy | 9/10 | [0.60, 0.98] |
+|  | mn | 9/10 | [0.60, 0.98] |
+| ecommerce-track-order | ar | 0/10 | [0.00, 0.28] |
+|  | zh | 0/10 | [0.00, 0.28] |
+|  | vi | 0/10 | [0.00, 0.28] |
+|  | sw | 0/10 | [0.00, 0.28] |
+|  | fr | 1/10 | [0.02, 0.40] |
+|  | yo | 1/10 | [0.02, 0.40] |
+|  | mn | 3/10 | [0.11, 0.60] |
+|  | id | 6/10 | [0.31, 0.83] |
+|  | eu | 9/10 | [0.60, 0.98] |
+| scheduling-book-new | eu | 2/10 | [0.06, 0.51] |
+| scheduling-reschedule | ar | 0/10 | [0.00, 0.28] |
+|  | zh | 0/10 | [0.00, 0.28] |
+|  | sw | 0/10 | [0.00, 0.28] |
+|  | id | 1/10 | [0.02, 0.40] |
+|  | mn | 8/10 | [0.49, 0.94] |
+|  | eu | 9/10 | [0.60, 0.98] |
+|  | yo | 9/10 | [0.60, 0.98] |
+| support-cancel-subscription | zh | 0/10 | [0.00, 0.28] |
+|  | eu | 0/10 | [0.00, 0.28] |
+|  | sw | 1/10 | [0.02, 0.40] |
+|  | id | 2/10 | [0.06, 0.51] |
+|  | ar | 3/10 | [0.11, 0.60] |
+|  | cy | 9/10 | [0.60, 0.98] |
+|  | yo | 9/10 | [0.60, 0.98] |
+| support-routing | mn | 1/10 | [0.02, 0.40] |
+|  | cy | 2/10 | [0.06, 0.51] |
+|  | sw | 9/10 | [0.60, 0.98] |
+|  | zh | 9/10 | [0.60, 0.98] |

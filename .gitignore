@@ -5,7 +5,6 @@ node_modules/
 .DS_Store
 dist/
 coverage/
-examples/deepseek-support-agent/benchmark-results.md
 
 # doctier:begin — managed by 'doctier init', do not edit
 **/_prototype-*

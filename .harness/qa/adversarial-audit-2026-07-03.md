@@ -1,502 +1,680 @@
-# Adversarial Codebase Audit — langdrift (2026-07-03)
-
-Auditor: Claude (adversarial staff-engineer review, full-repo read).
-Scope: all 82 tracked files at `d34d30f` on `claude/codebase-adversarial-audit-wo8pbw`.
-Method: every `src/`, `tests/`, `examples/`, `docs/` file read in full; suspected
-behaviors executed against the real code (Node 22.22, `node --test` suite green,
-`pnpm build`/`typecheck`/`lint` green, fake-agent demo run end-to-end, dead-target
-run executed, translate flow exercised against a mock LLM server, all 18 committed
-benchmark result tables recounted against `RESEARCH.md`).
-
-Note: the four ADRs under `.harness/adr/` are age-encrypted in this checkout
-(doctier, no recipient key available), so ADR drift is assessed against the ADR
-*titles*, `CHANGELOG.md`, and `RESEARCH.md` claims rather than ADR bodies.
-
----
-
-## 1. System map
-
-### What this actually is
-
-Despite "library+tool" positioning, the published npm artifact is a **CLI only**:
-`package.json` declares `bin: ./dist/cli.js` and **no `main`, `exports`, or
-`types`** — nothing is importable from the installed package. The runtime core is
-~1,600 lines of dependency-free TypeScript under `src/`, compiled to `dist/` by
-`tsc -p tsconfig.build.json` (`rewriteRelativeImportExtensions` rewrites the
-`.ts`-extension ESM imports). From a clone, everything runs raw `.ts` via Node
-type-stripping.
-
-### Real execution paths
-
-1. **`langdrift run <file|dir> --target <url>`** (`src/cli.ts:202-254` →
-   `src/runner.ts` → `src/httpTarget.ts` → `src/assertions.ts` → one of three
-   reporters). For each iteration × locale, the runner POSTs
-   `{locale, input, scenarioId}`, normalizes the response
-   (`httpTarget.ts:61-94`), and evaluates assertions in fixed order:
-   forbidden tool → `toolCall` (single/anyOf) → `toolCalls` sequence →
-   `responseLanguage` (`assertions.ts:72-111`). Per-locale iterations are
-   aggregated in `runner.ts:63-81` (first failure's mode/detail is the
-   representative). Exit code comes from `shouldFail` (`cli.ts:148-163`)
-   honoring `--allow-fail` then `--min-pass-rate`.
-   A directory resolves to N files (`runner.ts:101-114`); N>1 switches to a
-   *different* report schema (matrix) than N==1.
-2. **`langdrift lint`** (`src/lint.ts`) — re-parses scenarios; parse errors
-   become lint errors; adds three warnings (single locale, no `en`, cross-file
-   locale gaps).
-3. **`langdrift init`** (`src/init.ts`) — writes one of four inlined templates
-   (`wx` flag, refuses overwrite).
-4. **`langdrift translate`** (`src/translate.ts`) — OpenAI-only chat call, JSON
-   response mapped to new locale blocks; `--write` appends to the YAML.
-5. **Benchmark ingest** (`examples/benchmark/run.ts`) — spawns
-   `examples/agent/server.ts` (OpenAI/Anthropic/DeepSeek wrapper over 5-tool
-   domains), loops N iterations of `langdrift run --format json`, parses each
-   JSON report, aggregates per-locale pass counts + failure-mode counts, computes
-   a Wilson 95% CI per locale (`run.ts:171-186`), and overwrites
-   `examples/benchmark/results/<model>/<scenario>.md`.
-
-### Key invariants (and where they are enforced vs. assumed)
-
-| Invariant | Enforced | Notes |
-|---|---|---|
-| Scenario has `id`, `agent`, ≥1 locale, each locale has `input` + ≥1 assertion | `scenario.ts:30-48,173-181` (parse-time) | `agent` is then **never used** by anything |
-| YAML indentation is exactly 2 spaces per level, no block scalars, no flow maps | **Assumed** — hand-rolled parser (`scenario.ts:213-252`) silently or confusingly rejects valid YAML | See F-8 |
-| `oneOf` has ≥1 entry, inline-list syntax | `scenario.ts:353-373` | commas inside quoted items break (F-7) |
-| Argument equality is scalar-normalized | `assertions.ts:285-290` via `String()` | over-normalizes: arrays/objects/null coerce (F-1) |
-| `responseLanguage` = script-family check, pass-if-undeterminable | `assertions.ts:13-62,207-259` | Latin-side detector misses Georgian/Ethiopic (F-2) |
-| HTTP contract: `{text, toolCalls, structured}`, non-2xx fails locale | `httpTarget.ts` | contract violations silently coerced to empty response (F-21); failures mislabeled `no_tool_call` (F-5) |
-| Exit non-zero on failure; `--allow-fail` filters before `--min-pass-rate` | `cli.ts:148-163`; matches `docs/ci.md` | tested only against a **copy** of the function (F-24) |
-| Benchmark stats: report Wilson CIs, don't rerun (ADR-003 title) | CI code exists (`run.ts:171-186`, math verified correct) | **no committed artifact contains the CI column** (F-26) |
-
----
-
-## 2. Findings
-
-Severity: **P1** (wrong results / broken promises), **P2** (real but bounded),
-**P3** (polish/debt). Every finding was traced; those actually executed are
-marked CONFIRMED (run), those confirmed by full code trace CONFIRMED (trace),
-remaining PLAUSIBLE.
-
-### 2.1 Correctness — assertion engine
-
-**F-1 · P1 · `src/assertions.ts:285-290` — `String()` scalar coercion lets non-scalars pass argument assertions.**
-`matchesScalar` compares `String(actual) === String(expected)`. `String(["duplicate_charge"])`
-is `"duplicate_charge"`, so a tool call whose argument is the *array*
-`["duplicate_charge"]` passes the assertion `reason: duplicate_charge`; likewise
-`null` passes `x: "null"` and any object passes `"[object Object]"`. An agent
-that regresses from a scalar enum to an array of enums keeps passing evals.
-CONFIRMED (run). Direction: type-gate first (`typeof actual` must be
-string/number/boolean) and only then compare normalized scalars; report a distinct
-detail for shape mismatches.
-
-**F-2 · P1 · `src/assertions.ts:62` — `NON_LATIN_PATTERN` omits Georgian and Ethiopic, so fully wrong-script replies pass Latin-locale checks.**
-`SCRIPT_PATTERNS` knows `ka` (U+10A0–10FF) and `am` (U+1200–137F), but the
-combined `NON_LATIN_PATTERN` used for the Latin-locale dominance check does not
-include either range. A reply to an `en`/`fr`/`sw` locale written **entirely in
-Amharic or Georgian** passes `responseLanguage: en`. CONFIRMED (run: pure-Amharic
-and pure-Georgian texts both passed `en`). The two tables are hand-maintained
-duplicates of the same knowledge; they have already drifted. Direction: derive
-`NON_LATIN_PATTERN` from `SCRIPT_PATTERNS` (union of values), or use
-`\p{Script=Latin}` ratio instead of a blocklist.
-
-**F-3 · P2 · `src/assertions.ts:14-15` — `ja` pattern includes the full CJK Unified block; a pure-Chinese reply passes `responseLanguage: ja`.**
-`ja: /[぀-ヿ一-鿿㐀-䶿]/` matches Han-only text with zero kana. A model that
-answers a Japanese user in Chinese sails through. CONFIRMED (run). The README's
-"cannot distinguish languages that share a script" framing半-covers Han, but the
-reverse direction is asymmetric (kana-only Japanese fails `zh`), and the docs
-name only `fr`-vs-Latin and `ar/fa/ur` as examples. Related: `ko` (U+AC00–D7AF
-syllables only) misses Hangul Jamo/Compatibility-Jamo, and all patterns are
-BMP-only (CJK Extension B+ ignored — cosmetic at these thresholds). Direction:
-for `ja` require presence of kana, and document the Han asymmetry explicitly.
-
-**F-4 · P2 · `src/assertions.ts:225-238` — inconsistent, generous thresholds make the script check easy to satisfy.**
-Non-Latin locales pass if ≥10% of letters are in-script; Latin locales fail only
-if >50% are non-Latin. A reply that is 90% English with one trailing Chinese
-sentence passes `responseLanguage: zh` (CONFIRMED, run), and a reply that is 50%
-Japanese passes `en`. Neither threshold nor the asymmetry is documented.
-Direction: single documented dominance threshold, or report the measured ratio in
-`detail` so users can see near-misses.
-
-**F-5 · P1 · `src/runner.ts:41-47` — transport failures are classified as `no_tool_call`, the same failure mode as the product's headline finding.**
-Any fetch error, non-2xx, or invalid-JSON response is recorded with
-`failureMode: "no_tool_call"`. Running against a dead target yields 12 locales ×
-`no_tool_call  fetch failed` (CONFIRMED, run). Consequences: (a) `--min-pass-rate`
-CI gates treat an agent outage as locale drift; (b) the benchmark aggregator
-(`examples/benchmark/run.ts:229-235`) counts these in its `no_tool_call` column —
-the exact statistic RESEARCH.md's "the dominant failure mode … is `no_tool_call`"
-claim rests on. I grepped all 18 committed result files for `HTTP … from target` /
-`fetch failed` / `invalid JSON response` and found none, so the *published* data
-is clean — but nothing in the pipeline guarantees that. `docs/integrations.md:174`
-documents the mislabeling, which makes it deliberate but no less corrosive.
-Direction: introduce a distinct `target_error` failure mode (excluded from
-behavioral stats and, arguably, fail-fast in CI).
-
-**F-6 · P2 · `src/assertions.ts:170-205` — sequence assertion misreports argument mismatches as `wrong_sequence` and skips silently.**
-`assertToolCallSequence` advances only when name *and* args match; a call with
-the right name but wrong arguments is skipped without note, and the eventual
-failure says `sequence incomplete, missing: X` — pointing the user at a missing
-call that was in fact present with bad args (the `wrong_argument` mode never
-fires from sequences). CONFIRMED (trace; the greedy skip itself is correct for
-subsequence semantics). Direction: remember the best near-miss and surface it in
-`detail`.
-
-### 2.2 Correctness — scenario parser (hand-rolled YAML)
-
-**F-7 · P2 · `src/scenario.ts:353-373` — `oneOf` items containing quoted commas are mangled.**
-`oneOf: ["a, b", c]` parses to `["\"a", "b\"", "c"]` — naive `split(",")`
-before unquoting. CONFIRMED (run). Silent: the assertion then matches garbage.
-Direction: split respecting quotes, or reject quoted items containing commas.
-
-**F-8 · P2 · `src/scenario.ts` (whole file) — only exactly-2-space indentation is a scenario; valid YAML is rejected with misleading errors.**
-A 4-space-indented file (valid YAML) fails with `expected at least one locale`;
-tab indentation likewise; a block scalar (`input: |`) fails with
-`expected "key: value"` on the continuation line; flow mappings and multi-line
-inputs are unsupported. None of this is documented — the README calls the files
-"YAML scenarios". CONFIRMED (run, all four). Direction: either document "a strict
-2-space-indented YAML subset" prominently with better error messages
-(`line N: expected 2-space indentation`), or adopt a real YAML parser (the
-zero-dependency constraint is a design choice worth revisiting — see §3).
-
-**F-9 · P2 · `src/scenario.ts:267-297` — an empty `noToolCall:` block steals the next `name:` in the block, producing a self-contradictory assertion.**
-```yaml
-expect:
-  noToolCall:
-  toolCall:
-    name: create_refund
-```
-parses to `noToolCall.name == toolCall.name == "create_refund"` — the expected
-tool is also forbidden, so the locale can never pass, with a baffling
-`forbidden_tool` failure. Cause: `nestedScalarAt` searches for `name` at indent 8
-anywhere after the `noToolCall` line, unscoped to its sub-block. CONFIRMED (run).
-Direction: scope nested lookups to the parent's indentation block.
-
-**F-10 · P3 · `src/scenario.ts:195-208` — duplicate locale keys silently last-win.**
-Two `en:` blocks → the second replaces the first, no parse error, no lint
-warning. CONFIRMED (run). A copy-paste error silently halves coverage.
-
-**F-11 · P3 · `src/scenario.ts:76-91` — `anyOf` / `toolCalls` list items without a `name:` are silently dropped.**
-A typo (`nme:`) weakens the assertion set with no error (`parseToolCallList`
-only pushes items that yielded a name). CONFIRMED (trace). Lint should flag
-list items that contribute nothing.
-
-### 2.3 Benchmark ingest & stats integrity
-
-**F-12 · P1 · `examples/benchmark/run.ts:201-208` — the failure-mode column list omits `wrong_language`; such failures vanish from the table.**
-`failureModes` enumerates six modes but not `wrong_language` (added in 0.2.2).
-A `wrong_language` failure decrements Pass but appears in **no** failure column,
-so rows stop summing and the mode is invisible in published artifacts. (It also
-silently absorbs the mislabeled transport failures per F-5.) CONFIRMED (trace).
-Direction: derive the list from the `FailureMode` union in `src/types.ts` —
-today the benchmark keeps a second, already-stale copy of that enum.
-
-**F-13 · P2 · `examples/benchmark/results/**` — the committed dataset was produced by three different generator schemas, and none contains the CI column the writeup points readers to.**
-Header inspection of all 18 files: gpt-4o-mini and claude-haiku files have
-neither `wrong_sequence` nor `95% CI` columns (oldest generator); deepseek files
-have `wrong_sequence` but no CI; the current `run.ts` emits both. RESEARCH.md:60
-says "The benchmark report now prints a 95% Wilson confidence interval per
-locale, and per-cell pass rates throughout this document should be read as
-estimates with that uncertainty" — but no committed report shows any CI.
-ADR-003's title ("report CIs, not rerun benchmark") explains *why* the data
-wasn't regenerated, yet the result is a writeup citing uncertainty numbers that
-exist nowhere in the repo. CONFIRMED (verified all 18 headers). Direction:
-either append a generated CI appendix computed *from* the committed pass counts
-(no rerun needed — the CI is a pure function of `passes/n`), or state explicitly
-that CIs appear in reports generated ≥0.3.0 only.
-
-**F-14 · P1 · `RESEARCH.md:19-50` — the "Failing locale checks" columns silently omit failing locales, and at least one omission breaks any consistent "worst-N" reading.**
-I recounted every committed result table. All 18 headline pass rates match
-RESEARCH.md exactly (e.g. haiku support-routing 71/120, deepseek
-ecommerce-track 50/120, gpt scheduling-book-new 0/120) — the totals are honest.
-But the per-row failing-locale lists are truncated with no stated rule:
-- haiku support-routing lists 7 locales; the artifact shows 10 failing (ar 9/10,
-  ru 8/10, id 7/10 omitted).
-- haiku ecommerce-track-order lists `mn (0/10), cy (1/10), eu (1/10), en (3/10),
-  sw (4/10)` — but omits **zh (2/10)** and id (5/10). zh at 2/10 is *worse* than
-  two listed cells, so this is not a "worst five" cut; it reads like an
-  accidental drop.
-- haiku scheduling-book-new omits vi/yo/eu (all 4/10, equal to the listed ar).
-- deepseek support-cancel, ecommerce-cancel, ecommerce-track, and
-  scheduling-reschedule each omit 2 locales failing at 9/10; haiku
-  scheduling-reschedule and support-cancel omit 9/10 cells too.
-Only the gpt-4o-mini rows and two deepseek rows are complete. For a document
-whose thesis is cross-model recurrence of per-locale failures, incomplete
-per-locale lists understate several recurrences (e.g. zh recurs on haiku more
-than the writeup shows). CONFIRMED (recounted all 18 tables). Direction: state
-the truncation rule ("locales with ≤6/10 shown") or list all failing cells; fix
-the zh omission either way.
-
-**F-15 · P3 · `examples/benchmark/run.ts:171-186` — Wilson interval math is correct (verified: 7/10 → [0.397, 0.892]); but it is untested and unused by anything else.**
-No unit test covers `wilsonInterval` — the one piece of stats math the research
-document leans on. CONFIRMED (run: matches reference values, incl. 0/10 →
-[0, 0.278]). Direction: move it into `src/` with tests, and have the CLI's own
-JSON report emit it, so the "report CIs" ADR is enforced by the tool rather than
-by one example script.
-
-**F-16 · P3 · `examples/benchmark/run.ts:79-84` — the SIGKILL fallback is dead code.**
-`subprocess.killed` is true as soon as `kill("SIGINT")` *delivers* the signal,
-not when the process exits, so `if (!server.killed) server.kill("SIGKILL")` can
-never fire and a SIGINT-ignoring agent server outlives the benchmark. PLAUSIBLE
-(Node semantics; not experimentally provoked). Also: a single malformed
-`langdrift` stdout aborts the whole multi-iteration benchmark, discarding all
-completed iterations (`parseJsonRun` throws mid-loop), and each run silently
-overwrites the previous results file — repeated ingestion keeps no history.
-
-### 2.4 Alternative / unintended paths
-
-**F-17 · P2 · `src/httpTarget.ts:14-36` — no request timeout; one hung locale hangs the entire run (and CI job) forever.**
-`fetch` has no `AbortSignal`; the runner is fully serial
-(`runner.ts:32-61`), so iterations × locales requests execute one at a time with
-unbounded patience. CONFIRMED (trace). Direction: `AbortSignal.timeout(30_000)`
-+ a `--timeout` flag; classify as `target_error` (F-5).
-
-**F-18 · P3 · `src/cli.ts:51-59` — a stray `-v`/`-h` anywhere hijacks any command.**
-`langdrift run s.yaml --target http://x -v` prints the version and exits 0 —
-in a CI script, that is a silent green. CONFIRMED (trace: `args.includes` runs
-before command parsing). Similarly `--target --format` swallows the next flag as
-the target URL (no URL validation), producing a confusing `fetch failed` run.
-
-**F-19 · P3 · `src/cli.ts:127,148-163` — `--allow-fail` accepts any string; typos silently do nothing.**
-`--allow-fail ue` (transposed `eu`) filters no results and the build fails with
-no hint. No validation against the scenario's locale set. CONFIRMED (trace).
-
-**F-20 · P2 · `src/cli.ts:109-145` — directory runs change output schema based on file count.**
-A directory with two YAMLs emits the matrix JSON shape; the same directory with
-one YAML emits the single-run shape (`isMatrix = paths.length > 1`). Downstream
-tooling parsing `runs[]` breaks the day a scenarios directory shrinks to one
-file. CONFIRMED (trace). Direction: directory input ⇒ matrix shape, always.
-
-**F-21 · P3 · `src/httpTarget.ts:61-94` — contract violations are silently coerced instead of surfaced.**
-A body of `"ok"`, `[]`, or `{toolCalls: "create_refund_ticket"}` normalizes to
-`{text:"", toolCalls:[], structured:null}` and fails as `no_tool_call`,
-hiding an integration bug behind a behavioral verdict; tool-call items without a
-string `name` are dropped silently. CONFIRMED (trace). A "malformed response"
-detail would save integrators real time.
-
-### 2.5 Incoherences
-
-**F-22 · P2 · `src/types.ts:3` / `src/scenario.ts:34-36` — `agent` is a required field that nothing reads.**
-It is parsed, validated as required, and then never used: not sent to the target
-(`httpTarget.ts:25-29`), not reported, not matched against anything. The repo's
-own `examples/scenarios/support-routing.yaml:2` sets `agent: generic` under a
-"Domain: support" header comment and nothing notices. CONFIRMED (grep: only
-tests read `.agent`). Direction: either send it in the POST payload (useful
-routing metadata) or make it optional and deprecate.
-
-**F-23 · P2 · `tests/ci.test.ts:22-37` — the CI-gate logic is tested via a copy-pasted duplicate, not the real function.**
-`shouldFail` in `src/cli.ts:148` is not exported, so the test file re-implements
-it verbatim. The nine gate tests would keep passing if `cli.ts`'s copy regressed.
-(The comment at `ci.test.ts:63` — "fails at 70 threshold but passes at 70" — is
-self-contradictory, a smell of the drift risk.) CONFIRMED (read both).
-Direction: export `shouldFail` (or move to a `gate.ts`) and import it in tests.
-
-**F-24 · P3 · `CHANGELOG.md` 0.2.0 — claims `langdrift lint` validates "duplicate IDs"; no such check exists.**
-`src/lint.ts` checks locale count, `en` presence, and cross-file locale gaps
-only; nothing detects two files sharing a scenario `id` (which would collide in
-matrix reports keyed by `scenarioId`). CONFIRMED (read). Either the feature was
-lost or the changelog was aspirational.
-
-**F-25 · P3 · `src/types.ts:9-13` — `ArgMatcher` promises `number | boolean` values the parser can never produce.**
-`parseScalar`/`parseInlineList` return strings only; the numeric/boolean arms of
-the type (and of `oneOf`'s array) are reachable only by hypothetical programmatic
-callers — who cannot exist, because nothing is exported from the package (F-27).
-CONFIRMED (trace).
-
-**F-26 · P3 · `.gitignore:9` — stale path `examples/deepseek-support-agent/benchmark-results.md` (directory no longer exists).**
-
-### 2.6 Affordance & missing functionality
-
-**F-27 · P2 · `package.json` — no `main`/`exports`/`types`: the npm package has no programmatic surface.**
-`import anything from "langdrift"` fails against the published package;
-`declaration: false` in `tsconfig.build.json` means no types ship either. The
-README's "small, inspectable core" and the well-typed internal modules suggest a
-library; the artifact is CLI-only. Fine as a decision — but then `types.ts`'s
-doc-comments about consumer-facing shapes are aspirational. CONFIRMED (read
-package.json + build output). Direction: either add
-`exports` + declarations for `parseScenario`/`runScenario`/`assertExpectedToolCall`,
-or state "CLI-only" in the README.
-
-**F-28 · P3 · `src/types.ts:25-27` — `noToolCall` forbids exactly one tool.**
-No way to say "don't call any of [escalate_to_human, contact_seller]" without
-… nothing; there is no workaround. Scenario authors will want a list within a
-week of real use.
-
-**F-29 · P3 · `src/lint.ts` — lint misses every scenario-level trap this audit found.**
-No warnings for: `responseLanguage` locale not in either script table (the check
-is then a silent no-op — README documents pass-on-unknown but lint should say
-"this assertion cannot fail"); duplicate locale keys (F-10); nameless anyOf
-items (F-11); empty `noToolCall:` (F-9); `agent`/domain mismatch (F-22).
-Lint is the natural home for all of these.
-
-**F-30 · P3 · `src/translate.ts:139-187` — `serializeExpect` drops `responseLanguage` and silently drops locales the LLM didn't return.**
-Generated locale blocks copy `toolCall`/`toolCalls`/`noToolCall` but never emit a
-`responseLanguage` (arguably it should emit `responseLanguage: <target>` — the
-one assertion translate could add for free). `callLlm` filters out locales
-missing from the LLM's JSON with no warning (`translate.ts:134-136`): ask for 5
-locales, get 3, no error. CONFIRMED (trace + run).
-
-**F-31 · P1 · `src/translate.ts:150-152` — `oneOf` matchers serialize as `[object Object]`.**
-`lines.push(\`      ${k}: ${v}\`)` template-stringifies `ArgMatcher` values;
-translating any scenario that uses `oneOf` (the 0.3.0 flagship feature) emits
-`reason: [object Object]` into the YAML snippet / file. CONFIRMED (run, against
-a mock LLM server; output reproduced exactly). The two flagship 0.3.0 features
-are mutually broken through `translate`. Direction: serialize matchers back to
-`oneOf: [a, b]` form; add a round-trip test (parse → serialize → parse).
-
-### 2.7 Documentation
-
-**F-32 · P2 · `docs/ci.md:76-79` — the recommended readiness probe cannot succeed against agents shaped like the repo's own.**
-`npx wait-on http://127.0.0.1:3010/api/agent` requires a 2xx; both bundled agent
-servers return 404 for anything but `POST /api/agent`
-(`examples/agent/server.ts:28-31`), so the copy-pasted workflow times out after
-15s even when the agent is healthy. PLAUSIBLE (wait-on semantics not executed
-here; server behavior confirmed). Direction: recommend `wait-on tcp:3010`, or
-add a GET health route to the example servers.
-
-**F-33 · P3 · `README.md:155` — the script-check caveats undersell the holes.**
-"For a locale whose script LangDrift cannot determine, the check passes" is
-honest, but the documented examples omit that (a) `ja` accepts pure-Han Chinese
-(F-3), (b) Latin locales accept Georgian/Ethiopic entirely (F-2), (c) 10% of
-in-script letters suffices (F-4). A skeptical reader of README §Assertions would
-still be surprised by all three behaviors.
-
-**F-34 · P3 · `examples/scenarios/scheduling-book-new.yaml:76` — the Yoruba input likely says *Sunday*, not Monday.**
-`ní òwúrọ̀ ọjọ́ Àìkú` — *ọjọ́ Àìkú* is Sunday in Yoruba (Monday is *ọjọ́ Ajé*);
-every other locale says Monday morning. Day-of-week is immaterial to the
-`check_availability` assertion, but it is exactly the "unreviewed locale
-prompts" confound RESEARCH.md:62 warns about, sitting in the shipped eval suite.
-PLAUSIBLE (not native-verified).
-
-**F-35 · P3 · `src/reportMarkdown.ts:3-28` — the CI-recommended format drops the failure `Detail` column.**
-Terminal output includes per-locale detail strings; the markdown table
-(recommended for `$GITHUB_STEP_SUMMARY` in docs/ci.md) shows only the mode, so
-"expected X, got Y" is invisible exactly where triage happens. Also
-`formatMarkdownMatrixReport` bolds *passing* cells (inverted salience) and does
-not escape `|` in scenario ids.
-
-**F-36 · P3 · `package.json:59-60` — `engines: node >=24` is stricter than reality and unqualified.**
-The full test suite, build, and CLI run on Node 22.22 (type stripping + compiled
-dist). Consumers of the compiled package on Node 20/22 get engine warnings for
-no runtime reason; the constraint exists for clone-mode type-stripping only.
-CONFIRMED (run on v22.22.2).
-
-### 2.8 Developer experience / CI
-
-**F-37 · P2 · `.github/workflows/ci.yml` — CI never runs `pnpm build`.**
-Lint, typecheck (`noEmit`), and tests all exercise the `.ts` source; the compiled
-artifact (`tsconfig.build.json`, extension rewriting, shebang survival) is
-validated only by the release script's smoke test. A build-only breakage merges
-green and blocks at release time. CONFIRMED (read; `pnpm build` verified working
-today). Direction: add `pnpm build && node dist/cli.js --version` to CI.
-
-**F-38 · P2 · test coverage is concentrated on assertions/parser; the I/O half of the product is untested.**
-Zero tests for: `httpTarget` normalization (F-21), `runner` aggregation
-(first-fail representative logic), matrix reporters, `resolveScenarioPaths`,
-`lint` rules, `translate` serialization (would have caught F-31), `wilsonInterval`
-(F-15), and real CLI arg parsing (`shouldFail` tested only as a copy, F-23).
-CONFIRMED (read both test files; suite = 39 tests, 419ms).
-
-**F-39 · P3 · `scripts/release.sh` — solid overall (smoke-tests the packed tarball before bumping — good), but the check `git rev-list HEAD..origin/main` only catches being *behind*; unpushed local commits ride into the tag, and `CHANGELOG.md` is neither verified nor shipped (not in `files`).**
-
----
-
-## 3. Design tensions
-
-**T-1. The hand-rolled YAML subset is the largest bug factory in the repo, defending a "zero runtime dependencies" line item.**
-F-7, F-8, F-9, F-10, F-11 all live in `scenario.ts`'s indentation-arithmetic
-parser, and its rigidity (2-space only, no block scalars, no flow maps) directly
-constrains scenario authors — multi-line inputs, the most natural thing in a
-prompt-testing tool, are unsupported. Alternatives: (a) vendor a small YAML
-parser (`yaml` is one dependency; the README's "zero runtime dependencies" is a
-marketing line, not a security posture — the CLI already shells out to the
-network); (b) keep the subset but specify it: publish a grammar, fix block
-scoping, and emit precise indentation errors. The current middle ground —
-YAML-looking files with silently different semantics — is the worst option.
-
-**T-2. Failure modes are the product, but the taxonomy has no slot for "the harness failed".**
-The pitch is failure-mode classification (`no_tool_call`, `wrong_tool`, …), yet
-transport errors masquerade as `no_tool_call` (F-5), sequence argument
-mismatches masquerade as `wrong_sequence` (F-6), and `wrong_language` doesn't
-exist in the benchmark schema (F-12). One `FailureMode` union in `types.ts`
-should be the single source of truth, consumed by the benchmark, with an
-explicit `target_error` member. As long as infrastructure noise and model
-behavior share labels, every aggregate statistic is one outage away from
-corruption.
-
-**T-3. The research artifact and the tool have drifted into three timelines.**
-Code (CI-emitting, wrong_sequence-aware), committed benchmark data (three
-generator generations, no CIs), and RESEARCH.md (cites CIs that appear nowhere,
-truncates failing-locale lists inconsistently — F-13, F-14). ADR-003's
-"report CIs, don't rerun" is a sound anti-p-hacking stance, but the repo needs a
-mechanical link: regenerate the *presentation* (CIs are a pure function of the
-committed pass counts) without regenerating the *data*, and make RESEARCH.md's
-tables generated-from-artifacts rather than hand-copied.
-
-**T-4. CLI-only artifact wearing a library's skin.**
-Well-typed modules, exported functions, doc-commented types — and no
-`exports`/`main`/`types` in the package (F-27), so none of it is reachable.
-Tests already import the internals; external users get a copy-paste duplicate of
-`shouldFail`-style logic (F-23 is the in-repo symptom of the same disease).
-Decide: ship the API (index.ts + declarations + semver discipline) or declare
-CLI-only and collapse `types.ts`'s public-shape pretensions.
-
-**T-5. `responseLanguage`'s "never false-positive on uncertainty" policy is undermined by false negatives it can't see.**
-ADR-001's premise (script check over language ID) is defensible: no deps, no
-model, explainable. But the implementation direction is asymmetric in the unsafe
-direction — unknown locale passes, Georgian/Ethiopic pass Latin checks, 10%
-in-script passes, Han passes `ja`. A check whose failure is meaningful but whose
-pass is nearly meaningless should say so in its `detail` on every pass
-(`checked: script-family only, ratio 0.93`), or graduate to
-`\p{Script=…}` property classes which Node's regex engine already supports and
-which would delete both hand-maintained tables.
-
----
-
-## 4. Expectation gaps
-
-- **Expected** `npm install langdrift` to give me an importable API for the
-  documented types; **found** a CLI-only package with no `exports` and no
-  shipped types (F-27).
-- **Expected** "YAML scenarios" to mean YAML; **found** a 2-space-indented
-  subset where block scalars, tabs, and 4-space indents fail with unrelated
-  error messages (F-8).
-- **Expected** a `no_tool_call` verdict to mean the model didn't call a tool;
-  **found** it also means "the server was down" (F-5).
-- **Expected** the required `agent:` field to do something; **found** it is
-  never read, and the repo's own scenario sets it to the wrong value (F-22).
-- **Expected** `responseLanguage: en` to fail on a fully Amharic reply;
-  **found** it passes (F-2).
-- **Expected** `translate` to round-trip the 0.3.0 `oneOf` feature; **found**
-  `reason: [object Object]` (F-31).
-- **Expected** RESEARCH.md's per-scenario failing-locale lists to be complete
-  (or a stated top-N); **found** unexplained omissions, including a cell worse
-  than listed ones (F-14).
-- **Expected** the writeup's Wilson CIs to be visible in the committed
-  benchmark reports it describes; **found** no CI column in any of the 18 files
-  (F-13).
-- **Expected** the CI-gate math to be covered by its tests; **found** the tests
-  exercise a copy-pasted duplicate (F-23).
-- **Expected** CI to build the artifact npm ships; **found** only the release
-  script does (F-37).
-
-## 5. Open questions
-
-1. **ADR bodies:** the four ADRs are age-encrypted here. Does ADR-001 discuss
-   the Han/`ja` asymmetry and the Latin-blocklist approach (F-2/F-3), or were
-   those unexamined? Does ADR-003 sanction regenerating *presentation* from
-   committed counts (the F-13 fix), or freeze the artifacts byte-for-byte?
-2. **Is `agent:` reserved for a future feature** (per-agent target routing?) or
-   vestigial? If reserved, it should at least be sent in the POST body.
-3. **Is the package intended to grow a programmatic API** (matrix runners,
-   custom reporters would want one), or is CLI-only the durable position?
-4. **What is the intended truncation rule** for RESEARCH.md's failing-locale
-   columns — worst-N, ≤ threshold, or narrative pick? The haiku
-   ecommerce-track row (zh 2/10 omitted) satisfies none of them.
-5. **Node 24 floor:** deliberate simplification, or accidental coupling of the
-   clone-mode requirement to the published-package requirement (F-36)?
-6. **Was `lint`'s "duplicate IDs" check (CHANGELOG 0.2.0) removed deliberately**
-   (F-24), and should matrix reports collide-check `scenarioId` instead?
-
----
-
-*All findings verified against commit `d34d30f`. Test suite, `pnpm typecheck`,
-`pnpm lint`, and `pnpm build` all pass on this tree; nothing in this audit
-modified tracked files other than adding this report.*
+-----BEGIN AGE ENCRYPTED FILE-----
+YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHNzaC1lZDI1NTE5IExRMGNCZyBRQ0do
+OCtJaXZKR29KQ2czeUNMNXdiekJxUmxXTnl6TXVhZFl4dGJYL0JJCjl2MmdKc3F4
+S0FoU0FIRGkxdENpV1lwRlRiaUtWOHRMUmZmcGgyK3JTdkkKLS0tIEpLWE9aekVD
+cHMxWnNlalg0RStRQlZWTGFKakVvRU8yYUxsTmxFZW5FSGMKy0v7sWbraUaxCku/
+wNLmxRBo4+6UV3iLldiK8+8AQYKeUKa6CTUePKLHedcEd5VbKOKT5Qg47GIanF7R
+dCAjRTkX8qKOB1MVRm3JVxDLl0WM1txRvwy9gWiZ0qmlunwFg7+YWxB6pKX45VbT
+fHgkr2mqswc1P9FGud0Mh6409z/wrFJq89gEsCyBS4QGZ33CrExzinNHq6f52lBT
+n4WuWB/rGQ3dcMX5IhCwrQJLNYm0kghLxNTEqGft4CiKRdzOUhlG6JZ2ppCpobVl
+kBx0v8MahIdhVa/2TH4+ewSkuocBZpgzkdvQSgXQ0wQlBcYXg/jpUPvMssbP2WBW
+BPCny+yEvcTZHfN82CKbgVXoUwJg/W0SKhF6fVDzYivRuqXuL3ht50NhBAox4dg3
+9Lbk2lb6fso2P5HBcYXnz+7Rwh5mDm51f7FLORwQujU4WV+3CAgqWKZC3EosTnXY
+3jPY31LF/uPmWE1+0bw3QmBbSpoAg3MTO6t/sd9Bu5W4bdUKD3tpiKNXgcA0bSvI
+027ika5PYxNlZvyPvrFs8BlDLyO9d+R9695St9UIQZ6yNh512bPC7kfrNyZrZxX9
+6AsUHMqBx9a2eZiWFP2kpHEc+klNH9zQX6YJHAmv+3xKLdM7eAIqAsVfY2rXY35b
+0QWPhZzv0eqbXRv0IubiPU0CiEoT7wz/XL7GD7G0b0moO4YvMGAPY7xPL9snSvRc
+vvDCuCoJVPtcCPdB7YEXYxOCMPp/c73ed9lTD9yXUnves4dbKFncLQhu18Ohq2BU
+oIbssX1fEc02E75v33FkSXpb6ERrFb22wiKapmtNIO+iNVq1ii/TgR45kBt6uD2c
+GfBoCgVJS0PoDLqHcvzA/ZkrFlvoncv6CaDWzgYmTA9uyFYN8QqKXWfRfdbQfmJQ
++5CUAukeRVrWvBQDY3SvFELjsvcJ1u5kt/Yf18K8NmJ836aXGALN6zHg+Gdt24yx
+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
+g1PmiWdyPWHnODf+Bh4BTtahpSj1DvhlIOIgSLSXftCFos9pgTs5mF3cdQBTVoxV
+iZLvrYF4fl3LNJYpy5qEZPxlJ+UmXqbsQVRVKX5c5vNBeCPamMxmzNtrpWHEb1m1
+hAKU8OEnXJEbC2vuac96pfX4K8KjuSJSTx++sYF4RXIKsDq0CYV8uYmxCIZFEzCy
+jDlSQ0yf3bn8nyvqqhL0hCoTkhXXeP96mPDe2ItF2qQ0lP4QxYcWjXLgLzBcjD8B
+j39NjbpF7MR6RN+W9macOGoeZZ/5MBHfJa8vvJ3HjHdVdJJo5FrQXTKrnqSkkQ3h
+s0LGcrCc4nmfpcxgN5c93TztcvsfMUQ1fpKyJxUgSdPgzkpTZ3E5L4Z6v96n5yJq
+lfF1HhosEHCpmb9Paul7XrHf3isRlKo3MgfQBeP8b69eqyJ1hy4V4sc2YgSqOMqn
+ok+zEpcnL2Boe1t15sqZFGuuF3pdh9avcFZZVjMyCusPhc6jrqr2RVbrckf5Dhc1
+6hpW++TI/OM5iwbshAGU6+7n1JEfauZQF0/TuKeGw1nmA2AHXqfVYWVgE3YdnyTZ
+11knO4UeikZ99JHdtHYWuo+wl9Gr4fJrHLHylwd9r1c+GLQF+/spSLFZU6dXEPq8
+MyDw2Y5z7SOEPbzxV0vJkTOyRJg8g4z0Qny8w1RVqE3twHxxyKe3afp0lJ2FtZqU
+jVmGn1bEX2oSLwBgnb2ABsEJ5ppztKIcQMuKGbaJAodQ//CwflqUsv0qojV4IG6v
+cwjTXGxneapkIggSG7ONROOWp6fJQskttDWn3cdGtM8VXwa0uxwEE1SdGhTnxVyB
+akLCXh+U/ax7pmsfWRvur3rLzrR5fjmYFsJfldTehAUrsSBYgzObRwgwpsx43Uj5
+t5IxT1OPZSU45xYAcyjJClmDEMmnwD5ElxOuriSUTmWiS+3ZpTHAzEDitJ1GE08q
+vGnS7D+kV65musNXyGAaf/eLkp8BvGSbDXCPxn5OhB258eyqHPFojlODVa6Ja+43
+VB52+4hrm6RsnWhA4PTtwgvlToKjingRX7VYWQSQpcXzuh+WRjcZyKvhqMVgJXJy
+UzAKMSzo1ibbZ9nduCeNYdRTpSLi1AvoqSFbuE2AXgabKRXrK/a5FMvFCSu9EsM3
+GPtTT/Hf8/j7c8CEz7lCkQbSZhPKp714x6Lm3J2r4zI0+wvMjCIxKU6O6nLHT0Qq
+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
+-----END AGE ENCRYPTED FILE-----

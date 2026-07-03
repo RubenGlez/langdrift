@@ -33,10 +33,9 @@ locales:
   assert.ok(!Array.isArray(tc) && tc !== undefined);
   assert.equal(tc.name, "create_refund_ticket");
   assert.deepEqual(tc.arguments, { reason: "duplicate_charge" });
-  assert.equal(
-    scenario.locales.en.expect.noToolCall?.name,
+  assert.deepEqual(scenario.locales.en.expect.noToolCall?.names, [
     "escalate_to_human",
-  );
+  ]);
 });
 
 test("fails when the expected tool call is missing", () => {
@@ -78,7 +77,7 @@ test("fails when a forbidden tool call appears", () => {
   const result = assertExpectedToolCall(
     {
       toolCall: { name: "create_refund_ticket" },
-      noToolCall: { name: "escalate_to_human" },
+      noToolCall: { names: ["escalate_to_human"] },
     },
     {
       text: "I need a person.",
@@ -101,7 +100,7 @@ test("passes when a forbidden tool call is absent", () => {
   const result = assertExpectedToolCall(
     {
       toolCall: { name: "create_refund_ticket" },
-      noToolCall: { name: "escalate_to_human" },
+      noToolCall: { names: ["escalate_to_human"] },
     },
     {
       text: "I can help.",
@@ -373,11 +372,9 @@ test("responseLanguage fails when English text is expected to be Japanese", () =
       structured: null,
     },
   );
-  assert.deepEqual(result, {
-    pass: false,
-    failureMode: "wrong_language",
-    detail: "expected ja script in response, got mostly other script",
-  });
+  assert.equal(result.pass, false);
+  assert.equal(result.failureMode, "wrong_language");
+  assert.match(result.detail, /expected ja script/);
 });
 
 test("responseLanguage passes when Latin-script response matches en locale", () => {
@@ -408,12 +405,9 @@ test("responseLanguage fails when Japanese text is expected to be English", () =
       structured: null,
     },
   );
-  assert.deepEqual(result, {
-    pass: false,
-    failureMode: "wrong_language",
-    detail:
-      "expected Latin-script response (en), got mostly non-Latin characters",
-  });
+  assert.equal(result.pass, false);
+  assert.equal(result.failureMode, "wrong_language");
+  assert.match(result.detail, /expected Latin-script response \(en\)/);
 });
 
 test("responseLanguage passes when Arabic text matches ar locale", () => {
@@ -441,11 +435,9 @@ test("responseLanguage can be the sole assertion", () => {
       structured: null,
     },
   );
-  assert.deepEqual(result, {
-    pass: true,
-    failureMode: null,
-    detail: "responseLanguage: ru",
-  });
+  assert.equal(result.pass, true);
+  assert.equal(result.failureMode, null);
+  assert.match(result.detail, /responseLanguage: ru/);
 });
 
 test("responseLanguage tool call failure surfaces before language check", () => {
@@ -871,4 +863,191 @@ test("responseLanguage passes for Latin-vs-Latin (script cannot distinguish lang
   );
 
   assert.equal(result.pass, true);
+});
+
+// --- Adversarial-audit regression tests -----------------------------------
+
+test("F-1: an array argument does not pass a scalar assertion via String() coercion", () => {
+  const result = assertExpectedToolCall(
+    {
+      toolCall: {
+        name: "create_refund_ticket",
+        arguments: { reason: "duplicate_charge" },
+      },
+    },
+    {
+      text: "",
+      toolCalls: [
+        {
+          name: "create_refund_ticket",
+          arguments: { reason: ["duplicate_charge"] },
+        },
+      ],
+      structured: null,
+    },
+  );
+  assert.equal(result.pass, false);
+  assert.equal(result.failureMode, "wrong_argument");
+  assert.match(result.detail, /array/);
+});
+
+test("F-2: a fully Amharic reply fails responseLanguage: en", () => {
+  const result = assertExpectedToolCall(
+    { responseLanguage: "en" },
+    { text: "እኔ በዚህ ማገዝ እችላለሁ።", toolCalls: [], structured: null },
+  );
+  assert.equal(result.pass, false);
+  assert.equal(result.failureMode, "wrong_language");
+});
+
+test("F-2: a fully Georgian reply fails responseLanguage: en", () => {
+  const result = assertExpectedToolCall(
+    { responseLanguage: "en" },
+    {
+      text: "შემიძლია დაგეხმაროთ ამ საკითხში.",
+      toolCalls: [],
+      structured: null,
+    },
+  );
+  assert.equal(result.pass, false);
+  assert.equal(result.failureMode, "wrong_language");
+});
+
+test("F-3: pure-Chinese (Han only) text fails responseLanguage: ja", () => {
+  const result = assertExpectedToolCall(
+    { responseLanguage: "ja" },
+    { text: "我可以帮您处理退款。", toolCalls: [], structured: null },
+  );
+  assert.equal(result.pass, false);
+  assert.equal(result.failureMode, "wrong_language");
+});
+
+test("F-3: Japanese text with kana passes responseLanguage: ja", () => {
+  const result = assertExpectedToolCall(
+    { responseLanguage: "ja" },
+    { text: "払い戻しのお手伝いをします。", toolCalls: [], structured: null },
+  );
+  assert.equal(result.pass, true);
+});
+
+test("F-28: noToolCall anyOf fails when any forbidden tool is called", () => {
+  const scenario = parseScenario(`id: s
+agent: support
+locales:
+  en:
+    input: "hi"
+    expect:
+      toolCall:
+        name: create_refund
+      noToolCall:
+        anyOf: [escalate, contact_seller]
+`);
+  assert.deepEqual(scenario.locales.en.expect.noToolCall?.names, [
+    "escalate",
+    "contact_seller",
+  ]);
+  const result = assertExpectedToolCall(scenario.locales.en.expect, {
+    text: "",
+    toolCalls: [{ name: "create_refund" }, { name: "contact_seller" }],
+    structured: null,
+  });
+  assert.equal(result.pass, false);
+  assert.equal(result.failureMode, "forbidden_tool");
+});
+
+test("F-7: oneOf items with quoted commas parse as whole items", () => {
+  const scenario = parseScenario(`id: s
+agent: support
+locales:
+  en:
+    input: "hi"
+    expect:
+      toolCall:
+        name: t
+        arguments:
+          reason:
+            oneOf: ["a, b", c]
+`);
+  const tc = scenario.locales.en.expect.toolCall;
+  assert.ok(!Array.isArray(tc) && tc?.arguments);
+  assert.deepEqual(tc.arguments.reason, { oneOf: ["a, b", "c"] });
+});
+
+test("F-9: an empty noToolCall does not steal the next block's name", () => {
+  const scenario = parseScenario(`id: s
+agent: support
+locales:
+  en:
+    input: "hi"
+    expect:
+      noToolCall:
+      toolCall:
+        name: create_refund
+`);
+  // noToolCall had no name, so it must not exist; the tool call is intact.
+  assert.equal(scenario.locales.en.expect.noToolCall, undefined);
+  const tc = scenario.locales.en.expect.toolCall;
+  assert.ok(!Array.isArray(tc) && tc?.name === "create_refund");
+});
+
+test("F-10: duplicate locale keys are rejected", () => {
+  assert.throws(
+    () =>
+      parseScenario(`id: s
+agent: support
+locales:
+  en:
+    input: "a"
+    expect:
+      toolCall:
+        name: t
+  en:
+    input: "b"
+    expect:
+      toolCall:
+        name: t
+`),
+    /duplicate locale "en"/,
+  );
+});
+
+test("F-11: a tool-call list item without a name is rejected", () => {
+  assert.throws(
+    () =>
+      parseScenario(`id: s
+agent: support
+locales:
+  en:
+    input: "hi"
+    expect:
+      toolCalls:
+        - name: first
+        - nme: typo
+`),
+    /missing "name"/,
+  );
+});
+
+test("F-8: tab indentation is rejected with a clear message", () => {
+  assert.throws(
+    () => parseScenario("id: s\nagent: support\nlocales:\n\ten:\n"),
+    /tab indentation/,
+  );
+});
+
+test("F-8: block scalars are rejected with a clear message", () => {
+  assert.throws(
+    () =>
+      parseScenario(`id: s
+agent: support
+locales:
+  en:
+    input: |
+      multi
+    expect:
+      toolCall:
+        name: t
+`),
+    /block scalars/,
+  );
 });

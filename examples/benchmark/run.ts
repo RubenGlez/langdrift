@@ -3,6 +3,8 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { writeFile } from "node:fs/promises";
 import { basename } from "node:path";
+import { wilsonInterval } from "../../src/stats.ts";
+import { FAILURE_MODES } from "../../src/types.ts";
 
 const scenarioPath =
   process.env.SCENARIO ?? "./examples/scenarios/support-routing.yaml";
@@ -55,14 +57,30 @@ try {
     const startedAt = performance.now();
     const run = await runLangDrift();
     const durationMs = Math.round(performance.now() - startedAt);
-    const { summary, log } = parseJsonRun(run.stdout, run.stderr);
+    // A single malformed run shouldn't discard every completed iteration; skip
+    // it with a warning and keep going (F-16).
+    let parsed: { summary: Record<string, LocaleSummary>; log: string };
+    try {
+      parsed = parseJsonRun(run.stdout, run.stderr);
+    } catch (error) {
+      console.error(
+        `Iteration ${i + 1} produced unparseable output, skipping: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      continue;
+    }
     runs.push({
       iteration: i + 1,
       durationMs,
       exitCode: run.exitCode,
-      output: log,
-      summary,
+      output: parsed.log,
+      summary: parsed.summary,
     });
+  }
+
+  if (runs.length === 0) {
+    throw new Error("No benchmark iterations produced parseable output.");
   }
 
   const report = renderReport(runs);
@@ -77,11 +95,21 @@ try {
   console.error(`\nResults written to ${outPath}`);
 } finally {
   server.kill("SIGINT");
+  // `server.killed` only means a signal was delivered, not that the process
+  // exited, so it can't gate the SIGKILL fallback. Race the real exit event
+  // against a timeout and force-kill if the process is still running (F-16).
+  let exited = false;
+  const exitPromise = once(server, "exit").then(() => {
+    exited = true;
+  });
   await Promise.race([
-    once(server, "exit"),
+    exitPromise,
     new Promise<void>((resolve) => setTimeout(resolve, 3000)),
   ]);
-  if (!server.killed) server.kill("SIGKILL");
+  if (!exited) {
+    server.kill("SIGKILL");
+    await exitPromise;
+  }
 }
 
 async function waitForServer(): Promise<void> {
@@ -164,27 +192,6 @@ function parseJsonRun(
   return { summary, log: logLines.join("\n") };
 }
 
-// Wilson score interval for a binomial proportion. Reported per locale so
-// per-cell pass rates are read as estimates with uncertainty, not exact facts.
-// Runs are near-deterministic at temperature 0, so this reflects API-side
-// variance over N iterations, not a sampling distribution.
-function wilsonInterval(
-  passes: number,
-  total: number,
-  z = 1.96,
-): [number, number] | null {
-  if (total === 0) return null;
-  const p = passes / total;
-  const denom = 1 + (z * z) / total;
-  const center = (p + (z * z) / (2 * total)) / denom;
-  const margin =
-    (z / denom) *
-    Math.sqrt((p * (1 - p)) / total + (z * z) / (4 * total * total));
-  const low = Math.max(0, center - margin);
-  const high = Math.min(1, center + margin);
-  return [low, high];
-}
-
 function formatCi(passes: number, total: number): string {
   const ci = wilsonInterval(passes, total);
   if (!ci) return "—";
@@ -198,14 +205,9 @@ function renderReport(runs: BenchmarkRun[]): string {
   }
   const locales = Array.from(localeSet);
 
-  const failureModes = [
-    "no_tool_call",
-    "wrong_tool",
-    "wrong_argument",
-    "missing_argument",
-    "forbidden_tool",
-    "wrong_sequence",
-  ] as const;
+  // Derived from the single FailureMode source of truth so a newly added mode
+  // (wrong_language, target_error) can never silently vanish from the table (F-12).
+  const failureModes = FAILURE_MODES;
 
   type LocaleStats = {
     passes: number;

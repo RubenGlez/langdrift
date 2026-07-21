@@ -5,8 +5,6 @@
 
 Locale-aware evals for AI agent behavior.
 
-**Project page:** [rubenglez.dev/langdrift](https://rubenglez.dev/langdrift)
-
 LangDrift checks whether an AI agent preserves behavior across languages: tool selection, tool arguments, response script, and failure modes. It is built for teams who already test their agent in English and want to know what changes when the same intent arrives in French, Arabic, Chinese, Basque, Swahili, or any other locale.
 
 The core question:

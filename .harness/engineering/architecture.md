@@ -1,117 +1,57 @@
------BEGIN AGE ENCRYPTED FILE-----
-YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHNzaC1lZDI1NTE5IExRMGNCZyBwcTJL
-L2NLL1BrLzNReFQ3dHhQYnV2ejJBSUNSNFVqanhRbEhyKzFOYVJFCmtybXhIckZw
-VmZ1WjR4VkkzenlNS0ZuWkQrNFM4WmkxRm9ESVZ5blhmTFUKLS0tIEpPQ04xMmlB
-YmlVbnZmLzd5bnBDT0wvWDc1TENQQnVaTzZMbUF2VjRKQ3cKcR7VKN+OQxqYVLPj
-1vkK6bWhzNboGoK+d4E8fnQc7OYAwSPaVYqVR9U96n24IEpPjxobYDqWXTMtfS58
-Kgc5CkXKXdvnukZyPhglz+9kwL+qPFGuvay8h7qo7DarYuTBO3q7q4z6rJfaFrNM
-szJuIToUfT9ocyIMA3/0Aih1BfYJwE7LzsoHmZSnzkko+40CoMuPw0fHfbPNXVa/
-mIKf4TohaQQjhzZNI2b9/LATn/+mn1b2SQIOSb0VQ14NrEkkCbA/eftOnT/5k40M
-iPifmJwIEBYOtqWo8nNSFU6YhKyboDUavgSl+0soeDAISDQxlF5Z/83VG2JiB24s
-Gu+Xw1VHblL+6TnfK2Rdj8Yc+So1P0p1sUKfgqKrSg7cBboOsLpKIn9t/oFxzqcI
-gHmR0Ix+GBChkSZqk5n1j3eD4kUF8CUslxolqQpIe1sXNC+cEPx4V9Xdcgvk/vG7
-LG1CYlTPTmPPUmbrWp1MwSdC+WhzqO61jKJdnGnhS3KODkTy7mTHOHbGZ12HXBxQ
-GB0QpkuwrTg9yian1+4+2BdOix05X+z0YIfkaKRmuUHjIDsVAfGMCowll40BtxUF
-vkNLO84Na7X8EP6y32enoBL2wwzPrNGVi9TjcHF6itbUXPBXNUNAfE4vIO7EHsON
-mlb9HJ/E7oGAi0W4iTyZ3WFdUdcZbHrsU0sU10A0SxB4vHGbUDtqCTELWRFGccNO
-qiyBoyc0sySUZLR8Z2Iwq2s4PVH1OTrZReThmdopN+tmJbYE7/uL1EpCDHQ2yeMD
-/vykEvCDsCPI37rqQT/M5xNQjtyg6GIUqVerrzOTl5hC1zszJMFvQTk3s1U9b1DC
-2ODw30vIGYlKl6Ujha/aDiPqTrt9IikPnnnE3HTikRVd4TZiqBwiTSHcv7mls0wg
-SBnk2/XMnpEEO6O7kbhVikGvDivEQ6v7RogUH6jTAYLlAMvNPp/dDOCt+vC34x0t
-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
------END AGE ENCRYPTED FILE-----
+# Architecture
+
+## Overview
+
+LangDrift is a stateless CLI tool. There is no server and no persistent state. The dev workflow runs the TypeScript source directly via Node 24 native `strip-types` (`node ./src/cli.ts`), but the published package ships compiled JavaScript (`dist/`, built by `tsc` on `prepack`) because Node refuses to strip types under `node_modules` — see [ADR 0004](../adr/0004-build-step-for-npm-distribution.md). Zero runtime dependencies — every component from YAML parsing to Unicode script detection is hand-rolled.
+
+## Stack
+
+- Language: TypeScript (executed directly via Node >= 24 native strip-types)
+- Framework: none (pure Node.js)
+- Database / storage: none (stateless CLI)
+- Key libraries: `@biomejs/biome` (linting/formatting), `typescript` (type checking only)
+
+## Components
+
+- `cli.ts` — entry point; parses CLI args and dispatches to `run`, `init`, `lint`, and `translate` subcommands; owns exit code logic
+- `scenario.ts` — hand-rolled indent-aware YAML tokenizer (no external deps); exports `loadScenario` and `resolveScenarioPaths` for directory glob support
+- `runner.ts` — iterates locales sequentially; calls `executeHttpTarget` then `assertExpectedToolCall` per locale; exports `runScenario` (single file → `RunResult`) and `runScenarios` (directory → `MatrixResult`)
+- `httpTarget.ts` — POSTs `{ locale, input, scenarioId }` to the agent URL; normalizes missing response fields to `""`, `[]`, `null`; non-2xx is a locale failure
+- `assertions.ts` — deterministic assertion engine; handles `toolCall` (single or anyOf array), `toolCalls` (ordered sequence), `noToolCall`, and `responseLanguage`. Argument matching uses scalar-normalized equality plus optional per-argument `oneOf` (see `engineering/features.md#oneof-scalar-normalized-argument-matching`). `responseLanguage` is a script-family check, not language detection: it confirms script via Unicode ranges, returns PASS when a locale's script is not determinable, and only penalizes non-Latin content for locales in an explicit Latin allowlist (see `engineering/features.md#honest-script-family-check-for-responselanguage`)
+- `reportTerminal.ts` — plain-text formatter; prioritizes failure mode and first failing detail over raw response data
+- `reportJson.ts` — JSON formatter; emits the full `RunResult` or `MatrixResult` as structured output
+- `reportMarkdown.ts` — Markdown formatter; designed for GitHub Actions step summaries and PR comments
+- `init.ts` — generates starter YAML from built-in templates: `support`, `ecommerce`, `scheduling`, `generic`
+- `lint.ts` — scenario linter; checks for missing locales, duplicate IDs, and invalid assertion shapes; supports directory mode for cross-scenario locale coverage warnings
+- `translate.ts` — LLM-assisted locale generation; calls OpenAI API to translate user inputs across locales; `--write` modifies the YAML file in place
+- `types.ts` — shared type definitions: `Scenario`, `ScenarioLocale`, `TargetResponse`, `LocaleResult`, `RunResult`, `MatrixResult`
+
+## Data flow
+
+```
+CLI (cli.ts)
+  → loadScenario / resolveScenarioPaths (scenario.ts)  # parse YAML into Scenario; glob dirs
+  → runScenario / runScenarios (runner.ts)              # iterate locales (or matrix of scenarios)
+      → executeHttpTarget (httpTarget.ts)               # POST {locale, input, scenarioId} to agent
+      → assertExpectedToolCall (assertions.ts)          # deterministic assertion checks
+  → format report (reportTerminal / reportJson / reportMarkdown)
+  → exit 0 on pass, 1 on failure (based on pass rate or any-fail)
+```
+
+For directory runs, `runScenarios` aggregates per-file `RunResult` values into a `MatrixResult`. Single-file runs return `RunResult` directly.
+
+## HTTP target contract
+
+The agent endpoint must accept POST `{ locale, input, scenarioId }` and respond with `{ text, toolCalls[], structured }`. Missing fields normalize to `""`, `[]`, `null`. Any non-2xx response fails the locale immediately.
+
+## Key decisions
+
+- **Zero runtime dependencies** — the YAML parser is hand-rolled to avoid requiring a parser package; Unicode script detection is table-driven regex; all report formatters are pure string operations; this keeps `npm install` instant and audit surface minimal
+- **Build only for publishing** — the dev workflow type-strips `.ts` directly (no build), but the npm artifact is compiled to `dist/*.js` via `tsc` on `prepack`, because Node cannot type-strip under `node_modules` ([ADR 0004](../adr/0004-build-step-for-npm-distribution.md)). Build-time-only; zero runtime dependencies unchanged
+- **Deterministic assertions only** — no LLM-as-judge in the core; assertion results are explainable, stable, and CI-reproducible without a second API call
+- **`toolCall` anyOf semantics without a schema change** — `toolCall` accepts both a single object and an array; the YAML tokenizer's output is post-processed to detect both shapes, keeping the YAML authoring experience natural
+- **Exit code as the CI gate** — `--min-pass-rate` and `--allow-fail` translate pass/fail logic into exit codes 0/1, making the tool composable with any CI runner without custom plugins
+
+## Open questions
+
+- JSON schema assertions for `structured` output — how to validate without pulling in `ajv` or similar without breaking the zero-dependency rule?
